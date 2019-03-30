@@ -46,11 +46,20 @@ atoms1 = dict([(words[i-1][:1], i) for i in indices1])
 atoms2 = dict([(words[i-1][:2], i) for i in indices2])
 print(dict(atoms1, **atoms2))
 
+print('05. n-gram')
+
+# 与えられたシーケンス（文字列やリストなど）からn-gramを作る関数を作成せよ．この関数を用い，"I am an NLPer"という文から単語bi-gram，文字bi-gramを得よ．
+
+def n_gram(n, elems):
+    return [elems[i:i+n] for i in range(len(elems) - n + 1)]
+
+sentence = "I am an NLPer"
+
+print(n_gram(2, sentence.split()))
+print(n_gram(2, [c for c in sentence]))
+
+
 '''
-05. n-gram
-
-与えられたシーケンス（文字列やリストなど）からn-gramを作る関数を作成せよ．この関数を用い，"I am an NLPer"という文から単語bi-gram，文字bi-gramを得よ．
-
 06. 集合
 
 "paraparaparadise"と"paragraph"に含まれる文字bi-gramの集合を，それぞれ, XとYとして求め，XとYの和集合，積集合，差集合を求めよ．さらに，'se'というbi-gramがXおよびYに含まれるかどうかを調べよ．
