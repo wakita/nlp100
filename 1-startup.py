@@ -53,17 +53,30 @@ print('05. n-gram')
 def n_gram(n, elems):
     return [elems[i:i+n] for i in range(len(elems) - n + 1)]
 
+def n_wgram(n, words):
+    return [tuple(words) for words in n_gram(n, words)]
+
+def n_cgram(n, word):
+    return [''.join(c) for c in n_gram(n, [c for c in word])]
+
 sentence = "I am an NLPer"
 
-print(n_gram(2, sentence.split()))
-print(n_gram(2, [c for c in sentence]))
+print(n_wgram(2, sentence.split()))
+print([n_cgram(2, w) for w in sentence.split()])
 
+
+print('06. 集合')
+
+# "paraparaparadise"と"paragraph"に含まれる文字bi-gramの集合を，それぞれ, XとYとして求め，XとYの和集合，積集合，差集合を求めよ．さらに，'se'というbi-gramがXおよびYに含まれるかどうかを調べよ．
+
+def bi_cgram(word):
+    return set(n_cgram(2, [c for c in word]))
+
+s1, s2 = bi_cgram("paraparaparadise"), bi_cgram("paragraph")
+for ans in [s1.union(s2), s1.intersection(s2), s1.difference(s2), 'se' in s1, 'se' in s2]:
+    print(ans)
 
 '''
-06. 集合
-
-"paraparaparadise"と"paragraph"に含まれる文字bi-gramの集合を，それぞれ, XとYとして求め，XとYの和集合，積集合，差集合を求めよ．さらに，'se'というbi-gramがXおよびYに含まれるかどうかを調べよ．
-
 07. テンプレートによる文生成
 
 引数x, y, zを受け取り「x時のyはz」という文字列を返す関数を実装せよ．さらに，x=12, y="気温", z=22.4として，実行結果を確認せよ．
