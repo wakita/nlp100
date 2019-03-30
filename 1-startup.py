@@ -93,15 +93,23 @@ print(fmt1(12, '気温', 22.4))
 print(fmt2(12, '気温', 22.4))
 print(fmt3(12, '気温', 22.4))
 
-'''
-08. 暗号文
+print('08. 暗号文')
 
-与えられた文字列の各文字を，以下の仕様で変換する関数cipherを実装せよ．
+'''与えられた文字列の各文字を，以下の仕様で変換する関数cipherを実装せよ．
 
 - 英小文字ならば(219 - 文字コード)の文字に置換
 - その他の文字はそのまま出力
-- この関数を用い，英語のメッセージを暗号化・復号化せよ．
+- この関数を用い，英語のメッセージを暗号化・復号化せよ．'''
 
+def cipher(plain):
+    return ''.join([chr(219 - ord(c)) for c in plain])
+
+decipher = cipher
+
+print(cipher('This is a secret message.'))
+print(decipher(cipher('This is a secret message.')))
+
+'''
 09. Typoglycemia
 
 スペースで区切られた単語列に対して，各単語の先頭と末尾の文字は残し，それ以外の文字の順序をランダムに並び替えるプログラムを作成せよ．ただし，長さが４以下の単語は並び替えないこととする．適当な英語の文（例えば"I couldn't believe that I could actually understand what I was reading : the phenomenal power of the human mind ."）を与え，その実行結果を確認せよ．
