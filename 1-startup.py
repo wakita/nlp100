@@ -76,11 +76,24 @@ s1, s2 = bi_cgram("paraparaparadise"), bi_cgram("paragraph")
 for ans in [s1.union(s2), s1.intersection(s2), s1.difference(s2), 'se' in s1, 'se' in s2]:
     print(ans)
 
+print('07. テンプレートによる文生成')
+
+# 引数x, y, zを受け取り「x時のyはz」という文字列を返す関数を実装せよ．さらに，x=12, y="気温", z=22.4として，実行結果を確認せよ．
+
+def fmt1(x, y, z):
+    return '{}時の{}は{}'.format(x, y, z)
+
+def fmt2(x, y, z):
+    return '{0}時の{1}は{2}'.format(x, y, z)
+
+def fmt3(x, y, z):
+    return f'{x}時の{y}は{z}'
+
+print(fmt1(12, '気温', 22.4))
+print(fmt2(12, '気温', 22.4))
+print(fmt3(12, '気温', 22.4))
+
 '''
-07. テンプレートによる文生成
-
-引数x, y, zを受け取り「x時のyはz」という文字列を返す関数を実装せよ．さらに，x=12, y="気温", z=22.4として，実行結果を確認せよ．
-
 08. 暗号文
 
 与えられた文字列の各文字を，以下の仕様で変換する関数cipherを実装せよ．
