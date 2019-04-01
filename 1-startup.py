@@ -104,7 +104,7 @@ title('08. 暗号文')
 - この関数を用い，英語のメッセージを暗号化・復号化せよ．'''
 
 def cipher(plain):
-    return ''.join([chr(219 - ord(c)) for c in plain])
+    return ''.join([chr(219 - ord(c)) if c.islower() else c for c in plain])
 
 decipher = cipher
 
