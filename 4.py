@@ -13,8 +13,18 @@ chapter('第4章: 形態素解析')
 なお，問題37, 38, 39はmatplotlibもしくはGnuplotを用いるとよい．
 '''
 
-Path('data').mkdir(exist_ok=True)
-system('curl -o data/neko.txt http://www.cl.ecei.tohoku.ac.jp/nlp100/data/neko.txt')
+system('''
+mkdir -p data
+cd data
+if [ ! -f neko.txt ]
+then curl -o neko.txt http://www.cl.ecei.tohoku.ac.jp/nlp100/data/neko.txt
+fi
+
+if [ ! -x /usr/local/bin/mecab ]; then brew install mecab mecab-ipadic; fi
+
+if [ ! -f neko.txt.mecab ]; then mecab neko.txt > neko.txt.mecab; fi
+''')
+
 
 
 title('30. 形態素解析結果の読み込み')
