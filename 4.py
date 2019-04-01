@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import itertools
 from pathlib import Path
+import re
 
 from common import *
 
@@ -30,6 +32,21 @@ if [ ! -f neko.txt.mecab ]; then mecab neko.txt > neko.txt.mecab; fi
 title('30. 形態素解析結果の読み込み')
 
 # 形態素解析結果（neko.txt.mecab）を読み込むプログラムを実装せよ．ただし，各形態素は表層形（surface），基本形（base），品詞（pos），品詞細分類1（pos1）をキーとするマッピング型に格納し，1文を形態素（マッピング型）のリストとして表現せよ．第4章の残りの問題では，ここで作ったプログラムを活用せよ．
+
+mecab_data = None
+
+re_mecab = re.compile('([^\t]+)\t([^,]+),([^,]+),([^,]+)')
+def load_mecab():
+    text = Path('data/neko.txt.mecab').read_text()
+    for sentence in [line for line in text.split('EOS\n') if line != '']:
+        # dict('surface,base,pos,pos1'.split(), m[1:5])
+        yield [{ 'surface': m[1], 'base': m[2], 'pos': m[3], 'pos1': m[4] }
+               for m in [re_mecab.match(w)
+                         for w in sentence.split('\n')
+                         if w != '']]
+
+mecab = load_mecab()
+for x in list(mecab)[1]: print(x)
 
 title('31. 動詞')
 
