@@ -85,6 +85,12 @@ title('33. サ変名詞')
 
 # サ変接続の名詞をすべて抽出せよ．
 
+サ変接続名詞 = set([w['表層形']
+                          for sentence in mecab for w in sentence
+                          if w['品詞'] == '名詞' and w['品詞細分類1'] == 'サ変接続'])
+
+print(f'サ変接続名詞の数 = {len (verbs)}')
+print('{', ', '.join(random.sample(サ変接続名詞, 10)) + ', ... }')
 
 title('34. 「AのB」')
 
