@@ -96,7 +96,7 @@ title('34. 「AのB」')
 
 # 2つの名詞が「の」で連結されている名詞句を抽出せよ．
 
-re_の = re.compile('N(>N)+')
+re_AのB = re.compile('N(>N)+')
 
 def AのB(sentence, l, phrase):
     def code(w):
@@ -105,19 +105,15 @@ def AのB(sentence, l, phrase):
         return ' '
 
     s = ''.join([code(w) for w in sentence])
-    for m in re_の.finditer(s):
+    for m in re_AのB.finditer(s):
         if len(m[0]) > l:
-            l = len(m[0])
-            start, end = m.start(), m.end()
-            phrase = ''.join([w['表層形'] for w in sentence[start:end]])
+            l, phrase = len(m[0]), sentence[m.start():m.end()]
+            print('.'.join([w['表層形'] for w in phrase]))
     return l, phrase
 
-l = 0
-phrase = ''
+l, phrase = 0, ''
 for sentence in mecab:
     l, phrase = AのB(sentence, l, phrase)
-
-print(l, phrase)
 
 title('35. 名詞の連接')
 
@@ -130,30 +126,24 @@ def 最長名詞列(文, l, 名詞列):
 
     for m in re_名詞列.finditer(''.join(map(code, 文))):
         if len(m[0]) > l:
-            l = len(m[0])
-            名詞列 = '.'.join([w['表層形'] for w in 文[m.start():m.end()]])
-            print(l, 名詞列)
+            l, 名詞列 = len(m[0]), 文[m.start():m.end()]
+            print('.'.join([w['表層形'] for w in 名詞列]))
     return l, 名詞列
 
-l = 0
-名詞列 = ''
+l, 名詞列 = 0, ''
 for 文 in mecab:
     l, 名詞列 = 最長名詞列(文, l, 名詞列)
-
-print(l, 名詞列)
 
 title('36. 単語の出現頻度')
 
 # 文章中に出現する単語とその出現頻度を求め，出現頻度の高い順に並べよ．
 
 tf = dict()
-word = None
-c = 0
+word, c = None, 0
 for w in sorted([w['表層形'] for sentence in mecab for w in sentence]):
     if w != word:
         tf[word] = c
-        word = w
-        c = 1
+        word, c = w, 1
     else: c = c + 1
 tf[word] = c
 tf = sorted(tf.items(), key=lambda tc: tc[1], reverse=True)
