@@ -142,7 +142,7 @@ tf = dict()
 word, c = None, 0
 for w in sorted([w['表層形'] for sentence in mecab for w in sentence]):
     if w != word:
-        tf[word] = c
+        if word: tf[word] = c
         word, c = w, 1
     else: c = c + 1
 tf[word] = c
@@ -161,12 +161,12 @@ import numpy as np
 font = { 'family': 'IPAexGothic' }
 
 頻出語彙10 = tf[:10]
-print(頻出語彙10)
 
 words, counts = zip(*tf[:10])
 print(words, counts)
 counts = np.array(counts)
 ids = np.arange(len(words))
+
 plt.bar(ids, counts)
 plt.xticks(ids, words, **font)
 plt.show()
@@ -175,8 +175,26 @@ title('38. ヒストグラム')
 
 # 単語の出現頻度のヒストグラム（横軸に出現頻度，縦軸に出現頻度をとる単語の種類数を棒グラフで表したもの）を描け．
 
+max_count = 20
+histogram = np.zeros((max_count+1,), dtype=int)
+for _, c in tf:
+    i = min(c, max_count)
+    histogram[i] = histogram[i] + 1
 
+print(histogram)
+
+plt.bar(np.arange(histogram.shape[0]), histogram)
+plt.show()
 
 title('39. Zipfの法則')
 
 # 単語の出現頻度順位を横軸，その出現頻度を縦軸として，両対数グラフをプロットせよ．
+
+_, counts = zip(*tf)
+freq = np.array(counts)
+print(counts[:100])
+print(counts[-100:])
+plt.scatter(1 + np.arange(freq.shape[0]), freq)
+plt.xscale('log')
+plt.yscale('log')
+plt.show()
