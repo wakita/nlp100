@@ -74,6 +74,12 @@ title('32. 動詞の原形')
 
 # 動詞の原形をすべて抽出せよ．
 
+verbs = set([w['原形']
+             for sentence in mecab for w in sentence
+             if w['品詞'] == '動詞'])
+
+print(f'原形の数 = {len (verbs)}')
+print('{', ', '.join(random.sample(verbs, 10)) + ', ... }')
 
 title('33. サ変名詞')
 
