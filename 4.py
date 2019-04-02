@@ -146,6 +146,18 @@ title('36. 単語の出現頻度')
 
 # 文章中に出現する単語とその出現頻度を求め，出現頻度の高い順に並べよ．
 
+tf = dict()
+word = None
+c = 0
+for w in sorted([w['表層形'] for sentence in mecab for w in sentence]):
+    if w != word:
+        tf[word] = c
+        word = w
+        c = 1
+    else: c = c + 1
+tf[word] = c
+tf = sorted(tf.items(), key=lambda tc: tc[1], reverse=True)
+print(' '.join([t[0] for t in tf[:20]]))
 
 title('37. 頻度上位10語')
 
