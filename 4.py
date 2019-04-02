@@ -96,6 +96,29 @@ title('34. 「AのB」')
 
 # 2つの名詞が「の」で連結されている名詞句を抽出せよ．
 
+re_の = re.compile('N(>N)+')
+
+def AのB(sentence, l, phrase):
+    def code(w):
+        if w['品詞'] == '名詞': return 'N'
+        if w['品詞'] == '助詞' and w['表層形'] == 'の': return '>'
+        return ' '
+
+    s = ''.join([code(w) for w in sentence])
+    for m in re_の.finditer(s):
+        if len(m[0]) > l:
+            l = len(m[0])
+            start, end = m.start(), m.end()
+            phrase = ''.join([w['表層形'] for w in sentence[start:end]])
+            i = m.start()
+    return l, phrase
+
+l = 0
+phrase = ''
+for sentence in mecab:
+    l, phrase = AのB(sentence, l, phrase)
+
+print(l, phrase)
 
 title('35. 名詞の連接')
 
