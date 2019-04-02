@@ -110,7 +110,6 @@ def AのB(sentence, l, phrase):
             l = len(m[0])
             start, end = m.start(), m.end()
             phrase = ''.join([w['表層形'] for w in sentence[start:end]])
-            i = m.start()
     return l, phrase
 
 l = 0
@@ -124,6 +123,24 @@ title('35. 名詞の連接')
 
 # 名詞の連接（連続して出現する名詞）を最長一致で抽出せよ．
 
+re_名詞列 = re.compile('N+')
+
+def 最長名詞列(文, l, 名詞列):
+    def code(w): return 'N' if w['品詞'] == '名詞' else ' '
+
+    for m in re_名詞列.finditer(''.join(map(code, 文))):
+        if len(m[0]) > l:
+            l = len(m[0])
+            名詞列 = '.'.join([w['表層形'] for w in 文[m.start():m.end()]])
+            print(l, 名詞列)
+    return l, 名詞列
+
+l = 0
+名詞列 = ''
+for 文 in mecab:
+    l, 名詞列 = 最長名詞列(文, l, 名詞列)
+
+print(l, 名詞列)
 
 title('36. 単語の出現頻度')
 
