@@ -66,7 +66,7 @@ verbs = set([w['表層形']
              for sentence in mecab for w in sentence
              if w['品詞'] == '動詞'])
 
-print(f'表層形の数 = {len (verbs)}')
+print(f'表層形の数 = {len(verbs)}')
 print('{', ', '.join(random.sample(verbs, 10)) + ', ... }')
 
 
@@ -89,7 +89,7 @@ title('33. サ変名詞')
                           for sentence in mecab for w in sentence
                           if w['品詞'] == '名詞' and w['品詞細分類1'] == 'サ変接続'])
 
-print(f'サ変接続名詞の数 = {len (verbs)}')
+print(f'サ変接続名詞の数 = {len(verbs)}')
 print('{', ', '.join(random.sample(サ変接続名詞, 10)) + ', ... }')
 
 title('34. 「AのB」')
@@ -153,10 +153,28 @@ title('37. 頻度上位10語')
 
 # 出現頻度が高い10語とその出現頻度をグラフ（例えば棒グラフなど）で表示せよ．
 
+import matplotlib
+matplotlib.use('Tkagg')
+import matplotlib.pyplot as plt
+import numpy as np
+
+font = { 'family': 'IPAexGothic' }
+
+頻出語彙10 = tf[:10]
+print(頻出語彙10)
+
+words, counts = zip(*tf[:10])
+print(words, counts)
+counts = np.array(counts)
+ids = np.arange(len(words))
+plt.bar(ids, counts)
+plt.xticks(ids, words, **font)
+plt.show()
 
 title('38. ヒストグラム')
 
 # 単語の出現頻度のヒストグラム（横軸に出現頻度，縦軸に出現頻度をとる単語の種類数を棒グラフで表したもの）を描け．
+
 
 
 title('39. Zipfの法則')
