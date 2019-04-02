@@ -2,6 +2,7 @@
 
 import itertools
 from pathlib import Path
+import random
 import re
 
 from common import *
@@ -45,12 +46,18 @@ def load_mecab():
                          for w in sentence.split('\n')
                          if w != '']]
 
-mecab = load_mecab()
-for x in list(mecab)[1]: print(x)
+mecab = list(load_mecab())
+for x in mecab[1]: print(x)
 
 title('31. 動詞')
 
 # 動詞の表層形をすべて抽出せよ．
+
+verbs = set([w['surface']
+             for sentence in mecab for w in sentence
+             if w['base'] == '動詞'])
+
+print('{',', '.join(random.sample(verbs, 10)) + ', ... }')
 
 title('32. 動詞の原形')
 
