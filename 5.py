@@ -8,6 +8,8 @@ chapter('第5章: 係り受け解析')
 
 system('''
 if [ ! -x /usr/local/bin/cabocha ]; then brew install cabocha; fi
+mkdir -p data
+if [ ! -f data/neko.txt ]; then curl -o data/neko.txt http://www.cl.ecei.tohoku.ac.jp/nlp100/data/neko.txt; fi
 ''')
 
 title('40. 係り受け解析結果の読み込み（形態素）')
