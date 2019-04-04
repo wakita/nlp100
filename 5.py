@@ -40,8 +40,6 @@ EOS
 。	記号,句点,*,*,*,*,。,。,。
 '''
 
-
-
 # neko: [[Morph]]
 
 class Morph:
@@ -60,18 +58,62 @@ sentence = []
 
 with open('data/neko.txt.cabocha') as r:
     for line in r:
-        if line.startswith('EOS') and sentence != []:
-            sentences.append(sentence)
-        elif line.startswith('*'): sentence = []
+        if line.startswith('EOS'):
+            if sentence != []: sentences.append(sentence)
+            sentence = []
+        elif line.startswith('*'): pass
         else:
             sentence.append(Morph(line))
 
-for m in sentences[2]: print(m)
+for m in sentences[3]: print(m)
 
 
 title('41. 係り受け解析結果の読み込み（文節・係り受け）')
 
 # 40に加えて，文節を表すクラスChunkを実装せよ．このクラスは形態素（Morphオブジェクト）のリスト（morphs），係り先文節インデックス番号（dst），係り元文節インデックス番号のリスト（srcs）をメンバ変数に持つこととする．さらに，入力テキストのCaboChaの解析結果を読み込み，１文をChunkオブジェクトのリストとして表現し，8文目の文節の文字列と係り先を表示せよ．第5章の残りの問題では，ここで作ったプログラムを活用せよ．
+
+sentences = []
+sentence = []
+chunk = None
+
+# * 0 1D 1/2 1.058678
+class Chunk:
+    def __init__(self, line):
+        self.dst = int(line.split(' ')[2][:-1])
+        self.srcs = []
+        self.morphs = []
+
+    def morph(self, line):
+        self.morphs.append(Morph(line))
+
+    def __str__(self):
+        srcs = '' if self.srcs == [] else f'{str(self.srcs)[1:-1]} --> '
+        dst = f' --> {self.dst}' if self.dst != -1 else ''
+        morphs = ''.join([morph.surface for morph in self.morphs])
+        return f"{srcs}{morphs}{dst}"
+
+with open('data/neko.txt.cabocha') as r:
+    for line in r:
+        if line.startswith('EOS'):
+            if chunk: sentence.append(chunk); chunk = None
+            if sentence != []: sentences.append(sentence)
+            sentence = []
+        elif line.startswith('*'):
+            if chunk != None: sentence.append(chunk)
+            chunk = Chunk(line)
+        else: chunk.morph(line)
+    if chunk: sentence.append(chunk)
+    if sentence != []: sentences.append(sentence)
+
+for sentence in sentences:
+    for i, chunk in zip(range(len(sentence)), sentence):
+        if chunk.dst >= 0: sentence[chunk.dst].srcs.append(i)
+
+i = 0
+for chunks in sentences[8]:
+    print(f'{i}: {chunks}')
+    i = i + 1
+
 
 title('42. 係り元と係り先の文節の表示')
 
