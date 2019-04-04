@@ -8,13 +8,66 @@ chapter('第5章: 係り受け解析')
 
 system('''
 if [ ! -x /usr/local/bin/cabocha ]; then brew install cabocha; fi
-mkdir -p data
+mkdir -p data 5
 if [ ! -f data/neko.txt ]; then curl -o data/neko.txt http://www.cl.ecei.tohoku.ac.jp/nlp100/data/neko.txt; fi
+if [ ! -f data/neko.txt.cabocha ]; then
+       cabocha -f1 --output data/neko.txt.cabocha data/neko.txt
+fi
 ''')
 
 title('40. 係り受け解析結果の読み込み（形態素）')
 
 # 形態素を表すクラスMorphを実装せよ．このクラスは表層形（surface），基本形（base），品詞（pos），品詞細分類1（pos1）をメンバ変数に持つこととする．さらに，CaboChaの解析結果（neko.txt.cabocha）を読み込み，各文をMorphオブジェクトのリストとして表現し，3文目の形態素列を表示せよ．
+
+'''
+EOS
+* 0 1D 1/2 1.058678
+　	記号,空白,*,*,*,*,　,　,　
+どこ	名詞,代名詞,一般,*,*,*,どこ,ドコ,ドコ
+で	助詞,格助詞,一般,*,*,*,で,デ,デ
+* 1 4D 0/2 -1.453749
+生れ	動詞,自立,*,*,一段,連用形,生れる,ウマレ,ウマレ
+た	助動詞,*,*,*,特殊・タ,基本形,た,タ,タ
+か	助詞,副助詞／並立助詞／終助詞,*,*,*,*,か,カ,カ
+* 2 4D 0/0 -1.453749
+とんと	副詞,一般,*,*,*,*,とんと,トント,トント
+* 3 4D 0/1 -1.453749
+見当	名詞,サ変接続,*,*,*,*,見当,ケントウ,ケントー
+が	助詞,格助詞,一般,*,*,*,が,ガ,ガ
+* 4 -1D 0/1 0.000000
+つか	動詞,自立,*,*,五段・カ行イ音便,未然形,つく,ツカ,ツカ
+ぬ	助動詞,*,*,*,特殊・ヌ,基本形,ぬ,ヌ,ヌ
+。	記号,句点,*,*,*,*,。,。,。
+'''
+
+
+
+# neko: [[Morph]]
+
+class Morph:
+    def __init__(self, line):
+        assert not line.startswith('*')
+        assert not line.startswith('EOS')
+        self.surface, attributes = line.split('\t')
+        attributes = attributes.split(',')
+        self.base, self.pos, self.pos1 = attributes[:3]
+
+    def __str__(self):
+        return f'Morph({self.surface})[{self.base}, {self.pos}, {self.pos1}]'
+
+sentences = []
+sentence = []
+
+with open('data/neko.txt.cabocha') as r:
+    for line in r:
+        if line.startswith('EOS') and sentence != []:
+            sentences.append(sentence)
+        elif line.startswith('*'): sentence = []
+        else:
+            sentence.append(Morph(line))
+
+for m in sentences[2]: print(m)
+
 
 title('41. 係り受け解析結果の読み込み（文節・係り受け）')
 
@@ -51,8 +104,13 @@ title('45. 動詞の格パターンの抽出')
 
 コーパス中で頻出する述語と格パターンの組み合わせ
 「する」「見る」「与える」という動詞の格パターン（コーパス中で出現頻度の高い順に並べよ）
+'''
+
+
 title('46. 動詞の格フレーム情報の抽出')
-title('45のプログラムを改変し，述語と格パターンに続けて項（述語に係っている文節そのもの）をタブ区切り形式で出力せよ．45の仕様に加えて，以下の仕様を満たすようにせよ．')
+
+'''
+45のプログラムを改変し，述語と格パターンに続けて項（述語に係っている文節そのもの）をタブ区切り形式で出力せよ．45の仕様に加えて，以下の仕様を満たすようにせよ．
 
 項は述語に係っている文節の単語列とする（末尾の助詞を取り除く必要はない）
 述語に係る文節が複数あるときは，助詞と同一の基準・順序でスペース区切りで並べる
