@@ -119,6 +119,23 @@ title('42. 係り元と係り先の文節の表示')
 
 # 係り元の文節と係り先の文節のテキストをタブ区切り形式ですべて抽出せよ．ただし，句読点などの記号は出力しないようにせよ．
 
+def text(morphs):
+    return ''.join([m.surface
+                    for m in morphs if m.base != '記号'])
+
+def srcdst(sentence):
+    for chunk in sentence:
+        src = text(chunk.morphs)
+        if src == '': continue
+        if chunk.dst == -1: continue
+        dst = text(sentence[chunk.dst].morphs)
+        yield src, dst
+
+with open('5/neko-srcdest.txt', 'wt') as w:
+    for sentence in sentences:
+        for src, dst in srcdst(sentence):
+            w.write(f'"{src}"\t"{dst}"\n')
+
 
 title('43. 名詞を含む文節が動詞を含む文節に係るものを抽出')
 
