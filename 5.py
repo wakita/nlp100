@@ -141,6 +141,21 @@ title('43. 名詞を含む文節が動詞を含む文節に係るものを抽出
 
 # 名詞を含む文節が，動詞を含む文節に係るとき，これらをタブ区切り形式で抽出せよ．ただし，句読点などの記号は出力しないようにせよ．
 
+def sv(sentence):
+    for chunk in sentence:
+        if chunk.dst == -1: continue
+        if ('名詞' in set([morph.base for morph in chunk.morphs]) and
+                '動詞' in set([morph.base for morph in sentence[chunk.dst].morphs])):
+            src = text(chunk.morphs)
+            if src == '': continue
+            dst = text(sentence[chunk.dst].morphs)
+            yield src, dst
+
+with open('5/neko-sv.txt', 'wt') as w:
+    for sentence in sentences:
+        for src, dst in sv(sentence):
+            w.write(f'"{src}"\t"{dst}"\n')
+
 
 title('44. 係り受け木の可視化')
 
