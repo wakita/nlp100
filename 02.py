@@ -15,10 +15,6 @@ Path('2').mkdir(exist_ok=True)
 datapath = 'data/hightemp.txt'
 hightemp = datapath
 
-# ファイルの読み込み。最後の改行を無視してsplitの邪魔にならないようにしている。
-text = Path(hightemp).read_text()
-text_lines = text[:-1].split('\n')
-
 
 title('10. 行数のカウント')
 
@@ -187,9 +183,12 @@ title('18. 各行を3コラム目の数値の降順にソート')
 
 # 各行を3コラム目の数値の逆順で整列せよ（注意: 各行の内容は変更せずに並び替えよ）．確認にはsortコマンドを用いよ（この問題はコマンドで実行した時の結果と合わなくてもよい）．
 
+# ファイルの読み込み。最後の改行を無視してsplitの邪魔にならないようにしている。
+text_lines = Path(hightemp).read_text()[:-1].split('\n')
+
 print('my sort')
 print('\n'.join(sorted(text_lines, key=lambda line: line.split('\t')[2])))
-
+print()
 print('UNIX sort')
 print(system(f'sort -k 3 {hightemp}'))
 
