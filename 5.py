@@ -134,6 +134,9 @@ def srcdst(sentence):
         dst = text(sentence[chunk.dst].morphs)
         yield src, dst
 
+for src, dst in srcdst(sentences[8]):
+    print(f'"{src}"\t"{dst}"')
+
 with open('5/neko-srcdest.txt', 'wt') as w:
     for sentence in sentences:
         for src, dst in srcdst(sentence):
