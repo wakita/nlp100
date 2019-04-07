@@ -332,7 +332,10 @@ with open('5/neko-機能動詞.csv', 'wt') as w:
     for sentence in sentences:
         機能動詞(w, sentence)
 
+correct_answer = '返事をする\tと に は\t及ばんさと 手紙に 主人は\n'
+
 print(system('grep "及ばんさと" "5/neko-機能動詞.csv"'))
+assert system('grep "及ばんさと" "5/neko-機能動詞.csv"') == correct_answer, '47. 機能動詞構文のマイニング'
 
 title('48. 名詞から根へのパスの抽出')
 
