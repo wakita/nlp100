@@ -93,12 +93,17 @@ title('14. 先頭からN行を出力')
 
 # 自然数Nをコマンドライン引数などの手段で受け取り，入力のうち先頭のN行だけを表示せよ．確認にはheadコマンドを用いよ．
 
-def head(n, filepath):
-    return '\n'.join(Path(filepath).read_text().split('\n')[:n]) + '\n'
+def head(n, r, w):
+    i = 0
+    for line in r:
+        i = i + 1
+        w.write(line)
+        if i == n: break
 
-Path('2/14.txt').write_text(head(7, hightemp))
-
-assert cat('2/14.txt') == system(f'head -n 7 {hightemp}'), 'Failure in (14. head)'
+with open('2/14.txt') as r, io.StringIO() as s:
+    head(7, r, s)
+    print(s.getvalue())
+    assert s.getvalue() == system(f'head -n 7 {datapath}'), '14. 先頭からN行を出力'
 
 
 title('15. 末尾のN行を出力')
