@@ -24,15 +24,16 @@ title('10. 行数のカウント')
 
 # 行数をカウントせよ．確認にはwcコマンドを用いよ．
 
-os.system(f'wc -l {hightemp}')
-
 with open(datapath) as r:
     i = 0
     for _ in r:
         i = i + 1
     with io.StringIO() as s:
-        s.write(f'{i:8d} {datapath}')
-        print(s.getvalue())
+        s.write(f'{i:8d} {datapath}\n')
+        my_answer = s.getvalue()
+        print(my_answer)
+        unix_answer = system(f'wc -l {datapath}')
+        assert my_answer == unix_answer, '10. 行数のカウント'
 
 
 title('11. タブをスペースに置換')
