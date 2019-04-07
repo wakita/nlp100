@@ -44,8 +44,15 @@ title('11. タブをスペースに置換')
 # cat data/hightemp.txt | tr '\t' ' '
 # expand は使えないような気がするが。。。
 
-unix_answer = os.system(f"tr '\t' ' ' < {hightemp}")
-assert text.replace('\t', ' ') == unix_answer, 'Failure in (12. TAB -> SPACE)'
+def tr(s, r):
+    for line in r:
+        s.write(line.replace('\t', ' '))
+
+unix_answer = system(f"tr '\t' ' ' < {hightemp}")
+with open(datapath) as r:
+    with io.StringIO() as s:
+        tr(s, r)
+        assert s.getvalue() == system(f"tr '\t' ' ' < {datapath}"), '11. タブをスペースに置換'
 
 
 title('12. 1列目をcol1.txtに，2列目をcol2.txtに保存')
@@ -54,28 +61,41 @@ title('12. 1列目をcol1.txtに，2列目をcol2.txtに保存')
 
 lines = [line.split('\t') for line in text_lines]
 
-with open('2/12_col1.txt', 'wt') as col1:
-    col1.write('\n'.join([x for x, *_ in lines]) + '\n')
-with open('2/12_col2.txt', 'wt') as col2:
-    col2.write('\n'.join([x for _, x, *_ in lines]) + '\n')
+def split(r, col1, col2):
+    for line in r:
+        line1, line2 = line.split('\t')[:2]
+        col1.write(f'{line1}\n')
+        col2.write(f'{line2}\n')
 
-unix_answer = system('cut -f 1 data/hightemp.txt')
-assert cat('2/12_col1.txt') == unix_answer, 'Failure in (12. col1)'
-
-unix_answer = system('cut -f 2 data/hightemp.txt')
-assert cat('2/12_col2.txt') == unix_answer, 'Failure in (12. col2)'
+with open(datapath) as r, io.StringIO() as col1, io.StringIO() as col2:
+    split(r, col1, col2)
+    unix_answer = system('cut -f 1 data/hightemp.txt')
+    assert col1.getvalue() == system('cut -f 1 data/hightemp.txt'), '12. 1列目をcol1.txtに'
+    assert col1.getvalue() == system('cut -f 1 data/hightemp.txt'), '12. 2列目をcol2.txtに'
 
 
 title('13. col1.txtとcol2.txtをマージ')
 
 # 12で作ったcol1.txtとcol2.txtを結合し，元のファイルの1列目と2列目をタブ区切りで並べたテキストファイルを作成せよ．確認にはpasteコマンドを用いよ．
 
+def merge(col1, col2, w):
+    for l1, l2 in zip(col1, col2):
+        w.write(f'{l1[:-1]}\t{l2[:-1]}\n')
+
+with open(datapath) as r, open('2/12_col1.txt', 'wt') as col1, open('2/12_col2.txt', 'wt') as col2:
+    split(r, col1, col2)
+with open('2/12_col1.txt') as col1, open('2/12_col2.txt') as col2, io.StringIO() as col12:
+    merge(col1, col2, col12)
+    assert col12.getvalue() == system('paste 2/12_col1.txt 2/12_col2.txt'), 'Failure in (13. col1 + col2)'
+
+'''
 col1 = Path('2/12_col1.txt').read_text().split('\n')[:-1]
 col2 = Path('2/12_col2.txt').read_text().split('\n')[:-1]
 Path('2/13_col12.txt').write_text('\n'.join([f'{x1}\t{x2}' for x1, x2 in zip(col1, col2)]) + '\n')
 
 unix_answer = system('paste 2/12_col1.txt 2/12_col2.txt')
 assert cat('2/13_col12.txt') == unix_answer, 'Failure in (13. col1 + col2)'
+'''
 
 
 title('14. 先頭からN行を出力')
