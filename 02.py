@@ -88,15 +88,6 @@ with open('2/12_col1.txt') as col1, open('2/12_col2.txt') as col2, io.StringIO()
     merge(col1, col2, col12)
     assert col12.getvalue() == system('paste 2/12_col1.txt 2/12_col2.txt'), 'Failure in (13. col1 + col2)'
 
-'''
-col1 = Path('2/12_col1.txt').read_text().split('\n')[:-1]
-col2 = Path('2/12_col2.txt').read_text().split('\n')[:-1]
-Path('2/13_col12.txt').write_text('\n'.join([f'{x1}\t{x2}' for x1, x2 in zip(col1, col2)]) + '\n')
-
-unix_answer = system('paste 2/12_col1.txt 2/12_col2.txt')
-assert cat('2/13_col12.txt') == unix_answer, 'Failure in (13. col1 + col2)'
-'''
-
 
 title('14. 先頭からN行を出力')
 
