@@ -110,12 +110,20 @@ title('15. 末尾のN行を出力')
 
 # 自然数Nをコマンドライン引数などの手段で受け取り，入力のうち末尾のN行だけを表示せよ．確認にはtailコマンドを用いよ．
 
-def tail(n, filepath):
-    return '\n'.join(Path(filepath).read_text().split('\n')[-(n+1):-1]) + '\n'
+def tail(n, r, w):
+    buf = [None] * n
+    i = 0
+    for line in r:
+        buf[i % n] = line
+        i = i + 1
+    i = i % n
+    for line in buf[i:] + buf[:i]:
+        if line != None: w.write(line)
 
-Path('2/15.txt').write_text(tail(7, hightemp))
-unix_answer = system(f'tail -n 7 {hightemp}')
-assert cat('2/15.txt') == unix_answer, 'Failure in (15. tail)'
+with open(datapath) as r, io.StringIO() as s:
+    tail(7, r, s)
+    assert s.getvalue() == system(f'tail -n 7 {datapath}'), '15. 末尾のN行を出力'
+
 
 title('16. ファイルをN分割する')
 
@@ -123,7 +131,11 @@ title('16. ファイルをN分割する')
 
 # remark: データ項目数がきれいに割り切れない場合に注意すること
 
-def split(lines, n):
+abc = [chr(c) for c in range(ord('a'), ord('z')+1)]
+ext = [c1+c2 for c1 in abc for c2 in abc]
+print(ext)
+
+def split(w, base):
     n_lines = len(lines)
     length = (n_lines + 1) // n
     starts = range(0, n_lines, length)
@@ -142,6 +154,7 @@ files = sorted(glob('2/_16-*'))
 assert len(parts) == len(files), '16. #split data'
 for part, file in zip(parts, files):
     assert part == cat(file), f'16. {file}\n{part}'
+
 
 title('17. １列目の文字列の異なり')
 
