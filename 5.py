@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 from common import *
 
 chapter('第5章: 係り受け解析')
@@ -48,7 +50,8 @@ class Morph:
         assert not line.startswith('EOS')
         self.surface, attributes = line.split('\t')
         attributes = attributes.split(',')
-        self.base, self.pos, self.pos1 = attributes[:3]
+        self.pos, self.pos1 = attributes[:2]
+        self.base = attributes[6]
 
     def __str__(self):
         return f'Morph({self.surface})[{self.base}, {self.pos}, {self.pos1}]'
@@ -121,7 +124,7 @@ title('42. 係り元と係り先の文節の表示')
 
 def text(morphs):
     return ''.join([m.surface
-                    for m in morphs if m.base != '記号'])
+                    for m in morphs if m.pos != '記号'])
 
 def srcdst(sentence):
     for chunk in sentence:
@@ -144,8 +147,8 @@ title('43. 名詞を含む文節が動詞を含む文節に係るものを抽出
 def sv(sentence):
     for chunk in sentence:
         if chunk.dst == -1: continue
-        if ('名詞' in set([morph.base for morph in chunk.morphs]) and
-                '動詞' in set([morph.base for morph in sentence[chunk.dst].morphs])):
+        if ('名詞' in set([morph.pos for morph in chunk.morphs]) and
+                '動詞' in set([morph.pos for morph in sentence[chunk.dst].morphs])):
             src = text(chunk.morphs)
             if src == '': continue
             dst = text(sentence[chunk.dst].morphs)
@@ -179,6 +182,34 @@ title('45. 動詞の格パターンの抽出')
 コーパス中で頻出する述語と格パターンの組み合わせ
 「する」「見る」「与える」という動詞の格パターン（コーパス中で出現頻度の高い順に並べよ）
 '''
+
+# { 名詞 助詞 } --> { ... [動詞] ... 動詞 ... }: 最左の動詞の基本形
+# 動詞 \t 助詞1 助詞2 ...: 空白区切り、辞書順
+
+def 格パターン(w, sentence):
+    for chunk in sentence:
+        if chunk.srcs == []: continue
+        for morph in chunk.morphs:
+            if morph.pos == '動詞': 動詞 = morph.base
+            else: continue
+            主部たち = [sentence[src].morphs for src in chunk.srcs]
+            助詞たち = set([主部[-1].surface for 主部 in 主部たち
+                           if  len(主部) >= 2 and
+                               主部[-1].pos == '助詞' and
+                               主部[-2].pos == '名詞'])
+            if 助詞たち:
+                w.write(f"{動詞}\t{' '.join(sorted(助詞たち))}\n")
+            break
+
+格パターン(sys.stdout, sentences[5])
+'''
+
+with open('5/neko-格パターン.csv', 'wt') as w:
+    for sentence in sentences:
+        格パターン(w, sentence)
+
+
+# UNIX で最頻述語＆格パターン
 
 
 title('46. 動詞の格フレーム情報の抽出')
