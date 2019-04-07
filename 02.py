@@ -163,9 +163,18 @@ title('17. １列目の文字列の異なり')
 
 # 1列目の文字列の種類（異なる文字列の集合）を求めよ．確認にはsort, uniqコマンドを用いよ．
 
-my_answer = set([line.split('\t')[0] for line in text_lines])
-unix_answer = set(system(f'cut -f 1 {hightemp} | sort | uniq').split('\n')[:-1])
-assert my_answer == unix_answer, '17. terms'
+def words1(r, w):
+    for word in sorted(set([line.split('\t')[0] for line in r])):
+        w.write(word + '\n')
+
+with open(datapath) as r, io.StringIO() as s:
+    words1(r, s)
+    my_answer = s.getvalue()
+    print(my_answer)
+    my_answer = set(my_answer.split())
+    unix_answer = set(system(f'cut -f 1 {hightemp} | sort | uniq').split())
+    assert my_answer == unix_answer, '17. １列目の文字列の異なり'
+
 
 title('18. 各行を3コラム目の数値の降順にソート')
 
