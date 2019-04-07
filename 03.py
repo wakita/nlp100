@@ -23,7 +23,7 @@ title('20. JSONデータの読み込み')
 # Wikipedia記事のJSONファイルを読み込み，「イギリス」に関する記事本文を表示せよ．問題21-29では，ここで抽出した記事本文に対して実行せよ．
 
 with open('data/jawiki-country.json') as r:
-    for line in r.readlines():
+    for line in r:
         article = json.loads(line)
         if article['title'] == 'イギリス':
             uk_text = article['text']
