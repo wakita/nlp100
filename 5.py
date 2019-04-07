@@ -155,7 +155,7 @@ def sv(sentence):
             dst = text(sentence[chunk.dst])
             yield src, dst
 
-for src, dst in sv(sentences[8]):
+for src, dst in sv(sentences[3]):
     print(f'"{src}"\t"{dst}"')
 
 with open('5/neko-sv.txt', 'wt') as w:
