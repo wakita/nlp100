@@ -84,15 +84,22 @@ class Chunk:
     def __init__(self, line):
         self.dst = int(line.split(' ')[2][:-1])
         self.srcs = []
-        self.morphs = []
+        self._morphs = []
 
     def morph(self, line):
-        self.morphs.append(Morph(line))
+        self._morphs.append(Morph(line))
+
+    def morphs(self, 記号=False):
+        if 記号: return self._morphs
+        return [m for m in self._morphs if m.pos != '記号']
+
+    def text(self, 記号=False):
+        return ''.join([m.surface for m in self.morphs(記号=記号)])
 
     def __str__(self):
         srcs = '' if self.srcs == [] else f'{str(self.srcs)[1:-1]} --> '
         dst = f' --> {self.dst}' if self.dst != -1 else ''
-        morphs = ''.join([morph.surface for morph in self.morphs])
+        morphs = ''.join([morph.surface for morph in self.morphs()])
         return f"{srcs}{morphs}{dst}"
 
 with open('data/neko.txt.cabocha') as r:
@@ -122,14 +129,10 @@ title('42. 係り元と係り先の文節の表示')
 
 # 係り元の文節と係り先の文節のテキストをタブ区切り形式ですべて抽出せよ．ただし，句読点などの記号は出力しないようにせよ．
 
-def text(chunk):
-    return ''.join([m.surface
-                    for m in chunk.morphs if m.pos != '記号'])
-
 def srcdst(sentence):
     for chunk in sentence:
         if chunk.dst == -1: continue
-        src, dst = text(chunk), text(sentence[chunk.dst])
+        src, dst = chunk.text(), sentence[chunk.dst].text()
         if src != '' and dst != '': yield src, dst
 
 for src, dst in srcdst(sentences[8]):
@@ -148,11 +151,11 @@ title('43. 名詞を含む文節が動詞を含む文節に係るものを抽出
 def sv(sentence):
     for chunk in sentence:
         if chunk.dst == -1: continue
-        if ('名詞' in set([morph.pos for morph in chunk.morphs]) and
-                '動詞' in set([morph.pos for morph in sentence[chunk.dst].morphs])):
-            src = text(chunk)
+        if ('名詞' in set([morph.pos for morph in chunk.morphs()]) and
+                '動詞' in set([morph.pos for morph in sentence[chunk.dst].morphs()])):
+            src = chunk.text()
             if src == '': continue
-            dst = text(sentence[chunk.dst])
+            dst = sentence[chunk.dst].text()
             yield src, dst
 
 for src, dst in sv(sentences[3]):
@@ -193,10 +196,10 @@ title('45. 動詞の格パターンの抽出')
 def 格パターン(w, sentence):
     for chunk in sentence:
         if chunk.srcs == []: continue
-        for morph in chunk.morphs:
+        for morph in chunk.morphs():
             if morph.pos == '動詞': 動詞 = morph.base
             else: continue
-            主部たち = [sentence[src].morphs for src in chunk.srcs]
+            主部たち = [sentence[src].morphs() for src in chunk.srcs]
             助詞たち = [主部[-1].surface for 主部 in 主部たち
                         if  len(主部) >= 2 and
                             主部[-1].pos == '助詞' and
@@ -230,10 +233,10 @@ title('46. 動詞の格フレーム情報の抽出')
 def 格フレーム情報(w, sentence):
     for chunk in sentence:
         if chunk.srcs == []: continue
-        for morph in chunk.morphs:
+        for morph in chunk.morphs():
             if morph.pos == '動詞': 動詞 = morph.base
             else: continue
-            主部たち = [sentence[src].morphs for src in chunk.srcs]
+            主部たち = [sentence[src].morphs() for src in chunk.srcs]
             助詞_文節たち = [
                 (主部[-1].surface, ''.join([m.surface for m in 主部]))
                 for 主部 in 主部たち
@@ -270,6 +273,47 @@ title('47. 機能動詞構文のマイニング')
 コーパス中で頻出する述語と助詞パターン
 '''
 
+def 機能動詞(w, sentence):
+    for chunk in sentence:
+        if chunk.srcs == []: continue
+        for morph in chunk.morphs():
+            if morph.pos == '動詞': 動詞 = morph.base
+            else: continue
+            # この動詞に「サ変接続名詞+を（助詞）」で構成される文節が係るか？
+            サ変動詞 = None
+            for src in chunk.srcs:
+                主部 = sentence[src].morphs()
+                if (len(主部) >= 2 and
+                    主部[-1].pos == '助詞' and
+                    主部[-1].surface == 'を' and
+                    主部[-2].pos == '名詞' and
+                    主部[-2].pos1 == 'サ変接続'):
+                    サ変動詞 = sentence[src].text() + 動詞
+                    サ変id = src
+            if not サ変動詞: continue
+            主部たち = [sentence[src].morphs() for src in chunk.srcs if src != サ変id]
+            助詞_文節たち = [
+                (主部[-1].surface, ''.join(m.surface for m in 主部))
+                for 主部 in 主部たち
+                if len(主部) >= 1 and 主部[-1].pos == '助詞']
+            if 助詞_文節たち:
+                助詞_文節たち = sorted(助詞_文節たち, key=lambda 助詞_文節: 助詞_文節[0])
+                助詞たち, 文節たち = zip(*助詞_文節たち)
+                w.write(f"{サ変動詞}\t{' '.join(助詞たち)}\t{' '.join(文節たち)}\n")
+            break
+
+'''
+注意点：
+「　別段くるにも及ばんさと、主人は手紙に返事をする。」
+「及ばんさと、」で、読点を無視して判定しないと
+「及ばんさと -> 返事をする」を取りこぼす。
+'''
+
+with open('5/neko-機能動詞.csv', 'wt') as w:
+    for sentence in sentences:
+        機能動詞(w, sentence)
+
+print(system('grep "及ばんさと" "5/neko-機能動詞.csv"'))
 
 title('48. 名詞から根へのパスの抽出')
 
