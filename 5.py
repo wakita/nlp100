@@ -227,6 +227,30 @@ title('46. 動詞の格フレーム情報の抽出')
 見る    は を   吾輩は ものを
 '''
 
+def 格フレーム情報(w, sentence):
+    for chunk in sentence:
+        if chunk.srcs == []: continue
+        for morph in chunk.morphs:
+            if morph.pos == '動詞': 動詞 = morph.base
+            else: continue
+            主部たち = [sentence[src].morphs for src in chunk.srcs]
+            助詞_文節たち = [
+                (主部[-1].surface, ''.join([m.surface for m in 主部]))
+                for 主部 in 主部たち
+                if  len(主部) >= 2 and
+                    主部[-1].pos == '助詞' and
+                    主部[-2].pos == '名詞']
+            助詞_文節たち = sorted(助詞_文節たち, key=lambda 助詞_文節: 助詞_文節[0])
+            if 助詞_文節たち:
+                助詞たち, 文節たち = zip(*助詞_文節たち)
+                w.write(f"{動詞}\t{' '.join(助詞たち)}\t{' '.join(文節たち)}\n")
+            break
+
+格フレーム情報(sys.stdout, sentences[5])
+
+with open('5/neko-格フレーム情報.csv', 'wt') as w:
+    for sentence in sentences:
+        格フレーム情報(w, sentence)
 
 title('47. 機能動詞構文のマイニング')
 
