@@ -195,18 +195,19 @@ title('45. 動詞の格パターンの抽出')
 
 def 格パターン(w, sentence):
     for chunk in sentence:
-        if chunk.srcs == []: continue
+        # 動詞を探索
+        動詞 = None
         for morph in chunk.morphs():
-            if morph.pos == '動詞': 動詞 = morph.base
-            else: continue
-            主部たち = [sentence[src].morphs() for src in chunk.srcs]
-            助詞たち = [主部[-1].surface for 主部 in 主部たち
-                        if  len(主部) >= 2 and
-                            主部[-1].pos == '助詞' and
-                            主部[-2].pos == '名詞']
-            if 助詞たち:
-                w.write(f"{動詞}\t{' '.join(sorted(助詞たち))}\n")
-            break
+            if morph.pos == '動詞':
+                動詞 = morph
+                break
+        if not 動詞: continue
+        主部たち = [sentence[src].morphs() for src in chunk.srcs]
+        助詞たち = [主部[-1].surface for 主部 in 主部たち
+                    if  len(主部) >= 2 and
+                        主部[-2].pos == '名詞' and 主部[-1].pos == '助詞']
+        if 助詞たち:
+            w.write(f"{動詞.base}\t{' '.join(sorted(助詞たち))}\n")
 
 格パターン(sys.stdout, sentences[5])
 
@@ -234,19 +235,17 @@ def 格フレーム情報(w, sentence):
     for chunk in sentence:
         if chunk.srcs == []: continue
         for morph in chunk.morphs():
-            if morph.pos == '動詞': 動詞 = morph.base
-            else: continue
+            if morph.pos != '動詞': continue
             主部たち = [sentence[src].morphs() for src in chunk.srcs]
             助詞_文節たち = [
                 (主部[-1].surface, ''.join([m.surface for m in 主部]))
                 for 主部 in 主部たち
-                if  len(主部) >= 2 and
-                    主部[-1].pos == '助詞' and
-                    主部[-2].pos == '名詞']
-            助詞_文節たち = sorted(助詞_文節たち, key=lambda 助詞_文節: 助詞_文節[0])
+                if  len(主部) >= 2 and 主部[-2:] == ['名詞', '助詞']]
+            助詞_文節たち = sorted(助詞_文節たち,
+                                   key=lambda 助詞_文節: 助詞_文節[0])
             if 助詞_文節たち:
                 助詞たち, 文節たち = zip(*助詞_文節たち)
-                w.write(f"{動詞}\t{' '.join(助詞たち)}\t{' '.join(文節たち)}\n")
+                w.write(f"{morph.base}\t{' '.join(助詞たち)}\t{' '.join(文節たち)}\n")
             break
 
 格フレーム情報(sys.stdout, sentences[5])
