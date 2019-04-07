@@ -214,7 +214,7 @@ with open('5/neko-格パターン.csv', 'wt') as w:
     for sentence in sentences:
         格パターン(w, sentence)
 
-# Execute 45.sh
+print(system('./45.sh'))
 
 
 title('46. 動詞の格フレーム情報の抽出')
