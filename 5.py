@@ -197,10 +197,10 @@ def 格パターン(w, sentence):
             if morph.pos == '動詞': 動詞 = morph.base
             else: continue
             主部たち = [sentence[src].morphs for src in chunk.srcs]
-            助詞たち = set([主部[-1].surface for 主部 in 主部たち
-                           if  len(主部) >= 2 and
-                               主部[-1].pos == '助詞' and
-                               主部[-2].pos == '名詞'])
+            助詞たち = [主部[-1].surface for 主部 in 主部たち
+                        if  len(主部) >= 2 and
+                            主部[-1].pos == '助詞' and
+                            主部[-2].pos == '名詞']
             if 助詞たち:
                 w.write(f"{動詞}\t{' '.join(sorted(助詞たち))}\n")
             break
