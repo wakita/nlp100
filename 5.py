@@ -240,23 +240,35 @@ title('46. 動詞の格フレーム情報の抽出')
 
 def 格フレーム情報(w, sentence):
     for chunk in sentence:
-        if chunk.srcs == []: continue
+        # 動詞を探索
+        動詞 = None
         for morph in chunk.morphs():
-            if morph.pos != '動詞': continue
-            主部たち = [sentence[src].morphs() for src in chunk.srcs]
-            助詞_文節たち = [
-                (主部[-1].surface, ''.join([m.surface for m in 主部]))
-                for 主部 in 主部たち
-                if  len(主部) >= 2 and
-                    主部[-2].pos == '名詞' and 主部[-1].pos == '助詞']
-            助詞_文節たち = sorted(助詞_文節たち,
-                                   key=lambda 助詞_文節: 助詞_文節[0])
-            if 助詞_文節たち:
-                助詞たち, 文節たち = zip(*助詞_文節たち)
-                w.write(f"{morph.base}\t{' '.join(助詞たち)}\t{' '.join(文節たち)}\n")
-            break
+            if morph.pos == '動詞':
+                動詞 = morph.base
+                break
+        if not 動詞: continue
 
-格フレーム情報(sys.stdout, sentences[5])
+        項たち = [sentence[src].morphs() for src in chunk.srcs]
+        助詞_文節たち = [
+            (項[-1].surface, ''.join([m.surface for m in 項]))
+            for 項 in 項たち
+            if  len(項) >= 2 and
+                項[-2].pos == '名詞' and 項[-1].pos == '助詞']
+        助詞_文節たち = sorted(助詞_文節たち,
+                               key=lambda 助詞_文節: 助詞_文節[0])
+
+        if 助詞_文節たち:
+            助詞たち, 文節たち = zip(*助詞_文節たち)
+            w.write(f"{動詞}\t{' '.join(助詞たち)}\t{' '.join(文節たち)}\n")
+
+correct_answer = '''始める\tで\tここで
+見る\tは を\t吾輩は ものを
+'''
+
+with io.StringIO() as s:
+    格フレーム情報(s, sentences[5])
+    print(s.getvalue())
+    assert s.getvalue() == correct_answer, '46. 動詞の格フレーム情報の抽出'
 
 with open('5/neko-格フレーム情報.csv', 'wt') as w:
     for sentence in sentences:
