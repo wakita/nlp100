@@ -128,11 +128,9 @@ def text(chunk):
 
 def srcdst(sentence):
     for chunk in sentence:
-        src = text(chunk)
-        if src == '': continue
         if chunk.dst == -1: continue
-        dst = text(sentence[chunk.dst])
-        yield src, dst
+        src, dst = text(chunk), text(sentence[chunk.dst])
+        if src != '' and dst != '': yield src, dst
 
 for src, dst in srcdst(sentences[8]):
     print(f'"{src}"\t"{dst}"')
