@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import io
 import os
+import sys
 from pathlib import Path
 
 from common import *
@@ -10,7 +12,8 @@ Path('2').mkdir(exist_ok=True)
 
 # hightemp.txtは，日本の最高気温の記録を「都道府県」「地点」「℃」「日」のタブ区切り形式で格納したファイルである．以下の処理を行うプログラムを作成し，hightemp.txtを入力ファイルとして実行せよ．さらに，同様の処理をUNIXコマンドでも実行し，プログラムの実行結果を確認せよ．
 
-hightemp = 'data/hightemp.txt'
+datapath = 'data/hightemp.txt'
+hightemp = datapath
 
 # ファイルの読み込み。最後の改行を無視してsplitの邪魔にならないようにしている。
 text = Path(hightemp).read_text()
@@ -22,7 +25,14 @@ title('10. 行数のカウント')
 # 行数をカウントせよ．確認にはwcコマンドを用いよ．
 
 os.system(f'wc -l {hightemp}')
-print(len(text_lines))
+
+with open(datapath) as r:
+    i = 0
+    for _ in r:
+        i = i + 1
+    with io.StringIO() as s:
+        s.write(f'{i:8d} {datapath}')
+        print(s.getvalue())
 
 
 title('11. タブをスペースに置換')
@@ -33,7 +43,7 @@ title('11. タブをスペースに置換')
 # cat data/hightemp.txt | tr '\t' ' '
 # expand は使えないような気がするが。。。
 
-unix_answer = system(f"tr '\t' ' ' < {hightemp}")
+unix_answer = os.system(f"tr '\t' ' ' < {hightemp}")
 assert text.replace('\t', ' ') == unix_answer, 'Failure in (12. TAB -> SPACE)'
 
 
