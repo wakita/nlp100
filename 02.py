@@ -24,16 +24,16 @@ title('10. 行数のカウント')
 
 # 行数をカウントせよ．確認にはwcコマンドを用いよ．
 
-with open(datapath) as r:
+def wc(r, w):
     i = 0
-    for _ in r:
-        i = i + 1
+    for _ in r: i = i + 1
+    w.write(f'{i:8d} {datapath}\n')
+
+with open(datapath) as r:
     with io.StringIO() as s:
-        s.write(f'{i:8d} {datapath}\n')
+        wc(r, s)
         my_answer = s.getvalue()
-        print(my_answer)
-        unix_answer = system(f'wc -l {datapath}')
-        assert my_answer == unix_answer, '10. 行数のカウント'
+        assert s.getvalue() == system(f'wc -l {datapath}'), '10. 行数のカウント'
 
 
 title('11. タブをスペースに置換')
@@ -133,9 +133,8 @@ title('16. ファイルをN分割する')
 
 abc = [chr(c) for c in range(ord('a'), ord('z')+1)]
 ext = [c1+c2 for c1 in abc for c2 in abc]
-print(ext)
 
-def split(w, base):
+def split(n, r, base):
     n_lines = len(lines)
     length = (n_lines + 1) // n
     starts = range(0, n_lines, length)
