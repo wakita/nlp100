@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import io
 import sys
 
 from common import *
@@ -209,7 +210,13 @@ def 格パターン(w, sentence):
         if 助詞たち:
             w.write(f"{動詞.base}\t{' '.join(sorted(助詞たち))}\n")
 
-格パターン(sys.stdout, sentences[5])
+correct_answer = '''始める\tで
+見る\tは を
+'''
+
+with io.StringIO() as s:
+    格パターン(s, sentences[5])
+    assert s.getvalue() == correct_answer, '45. 動詞の格パターンの抽出'
 
 with open('5/neko-格パターン.csv', 'wt') as w:
     for sentence in sentences:
@@ -240,7 +247,8 @@ def 格フレーム情報(w, sentence):
             助詞_文節たち = [
                 (主部[-1].surface, ''.join([m.surface for m in 主部]))
                 for 主部 in 主部たち
-                if  len(主部) >= 2 and 主部[-2:] == ['名詞', '助詞']]
+                if  len(主部) >= 2 and
+                    主部[-2].pos == '名詞' and 主部[-1].pos == '助詞']
             助詞_文節たち = sorted(助詞_文節たち,
                                    key=lambda 助詞_文節: 助詞_文節[0])
             if 助詞_文節たち:
