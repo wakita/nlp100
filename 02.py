@@ -134,25 +134,29 @@ title('16. ファイルをN分割する')
 abc = [chr(c) for c in range(ord('a'), ord('z')+1)]
 ext = [c1+c2 for c1 in abc for c2 in abc]
 
-def split(n, r, base):
-    n_lines = len(lines)
-    length = (n_lines + 1) // n
-    starts = range(0, n_lines, length)
-    texts = [lines[start :
-                   start + length if start + length <= n_lines else n_lines]
-             for start in starts]
-    return ['\n'.join(text) + '\n' for text in texts]
+def split(length, ipath, opath):
+    i = 0
+    with open(ipath) as r:
+        while True:
+            with open(f'{opath}-{ext[i // length]}', 'wt') as w:
+                nextFile = False
+                for line in r:
+                    w.write(line)
+                    i = i + 1
+                    if i % length == 0:
+                        nextFile = True
+                        break
+                if not nextFile: return
 
 from glob import glob
 
 n_split = 5
-parts = split(text_lines, n_split)
-n_lines = len(text_lines)
-system(f'split -l {(n_lines + 1) // n_split} {hightemp} 2/_16-')
-files = sorted(glob('2/_16-*'))
-assert len(parts) == len(files), '16. #split data'
-for part, file in zip(parts, files):
-    assert part == cat(file), f'16. {file}\n{part}'
+split(n_split, datapath, '2/16')
+system(f'split -l {n_split} {hightemp} 2/_16-')
+
+paths, _paths = glob('2/16-*'), glob('2/_16-*')
+for path, _path in zip(paths, _paths):
+    assert system(f'cat {path}') == system(f'cat {_path}'), '16. ファイルをN分割する'
 
 
 title('17. １列目の文字列の異なり')
