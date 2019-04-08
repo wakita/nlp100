@@ -119,7 +119,7 @@ title('35. 名詞の連接')
 
 # 名詞の連接（連続して出現する名詞）を最長一致で抽出せよ．
 
-re_名詞列 = re.compile('N+')
+re_名詞列 = re.compile('NN+')
 
 def 最長名詞列(文, l, 名詞列):
     def code(w): return 'N' if w['品詞'] == '名詞' else ' '
