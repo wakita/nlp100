@@ -173,6 +173,17 @@ title('44. 係り受け木の可視化')
 
 # 与えられた文の係り受け木を有向グラフとして可視化せよ．可視化には，係り受け木をDOT言語に変換し，Graphvizを用いるとよい．また，Pythonから有向グラフを直接的に可視化するには，pydotを使うとよい．
 
+import networkx as nx
+import pygraphviz
+
+def visualize(文):
+    G = nx.Graph()
+    for 節 in 文: G.add_node(節, label=節.text())
+    for 節 in 文[:-1]: G.add_edge(節, 文[節.dst])
+    g = nx.nx_agraph.to_agraph(G)
+    g.draw(f"5/{''.join([節.text() for 節 in 文])}.pdf", format='pdf', prog='dot')
+
+visualize(sentences[5])
 
 title('45. 動詞の格パターンの抽出')
 
