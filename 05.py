@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import io
+import itertools
 import sys
 
 from common import *
@@ -352,6 +353,9 @@ title('48. 名詞から根へのパスの抽出')
 ものを -> 見た
 '''
 
+def パス表現(文節列):
+    return f"{' -> '.join([文節.text() for 文節 in 文節列])}"
+
 def 根へのパス(w, sentence):
     for chunk in sentence:
         # 名詞を含む文節か？
@@ -361,7 +365,7 @@ def 根へのパス(w, sentence):
         while chunk.dst != -1:
             chunk = sentence[chunk.dst]
             文節列.append(chunk)
-        w.write(f"{' -> '.join([文節.text() for 文節 in 文節列])}\n")
+        w.write(パス表現(文節列) + '\n')
 
 correct_answer = '''吾輩は -> 見た
 ここで -> 始めて -> 人間という -> ものを -> 見た
@@ -415,3 +419,98 @@ Xで -> 始めて -> Y
 Xで -> 始めて -> 人間という -> Y
 Xという -> Y
 '''
+
+'''
+解の方針
+
+1. 名詞句の集合を得る
+2. 名詞句対の「集合」を得る（ただし、自分とは対をなさないことに注意）
+3. X* = [X, X.dst, ..., 根], Y* を計算
+4. Y in X*: [X, ..., Y] を48の要領で表示
+5. X in Y*: [Y, ..., X] を48の要領で表示
+6. ほかの場合: X* と Y* の共通先祖を探す。以下のようになるはずだからリストの後ろから最長一致で探せばよい
+      X* = [X, ..., [共通], ..., 根]
+      Y* = [Y, ..., [共通], ..., 根]
+
+注意: 名詞の X, Y へ破壊的に置換するとまずいことになると思う
+'''
+
+def 係り受けパス(w, 文):
+    名詞節群 = [文節 for 文節 in 文
+                  if '名詞' in [形態素.pos for 形態素 in 文節.morphs()]]
+    名詞節対群 = []
+    名詞節群1 = 名詞節群[:-1]
+    for i, 名詞節1 in zip(range(len(名詞節群1)), 名詞節群1):
+        for 名詞節2 in 名詞節群[i+1:]:
+            名詞節対群.append([名詞節1, 名詞節2])
+
+    def パス(節):
+        p = [節]
+        while 節.dst != -1:
+            節 = 文[節.dst]
+            p.append(節)
+        return p
+
+    def 抽象パス表現(パス, 名詞節1, 名詞節2):
+        パス表現 = []
+        for 節 in パス:
+            if 節 == 名詞節1:
+                パス表現.append(''.join([m.surface if m.pos != '名詞' else 'X'
+                                         for m in 節.morphs()]))
+            elif 節 == 名詞節2:
+                パス表現.append(''.join([m.surface if m.pos != '名詞' else 'Y'
+                                         for m in 節.morphs()]))
+            else: パス表現.append(節.text())
+
+        return ' -> '.join(パス表現)
+
+    for 名詞節1, 名詞節2 in 名詞節対群:
+        パス1, パス2 = パス(名詞節1), パス(名詞節2)
+
+        try:
+            i = パス1.index(名詞節2)
+            w.write(抽象パス表現(パス1[:i+1], 名詞節1, 名詞節2) + '\n')
+            continue
+        except: pass
+
+        try:
+            i = パス2.index(名詞節1)
+            w.write(抽象パス表現(パス2[:i+1], 名詞節1, 名詞節2) + '\n')
+            continue
+        except: pass
+
+        for 節 in パス1[::-1]:
+            if 節 in パス2: Z = 節
+            else: break
+        i = パス1.index(Z)
+        共通パス表現 = パス表現(パス1[i:])
+        パス1 = パス1[:i]
+        パス2 = パス2[:パス2.index(Z)]
+        パス表現1 = 抽象パス表現(パス1, 名詞節1, None)
+        パス表現2 = 抽象パス表現(パス2, None, 名詞節2)
+        w.write(f'{パス表現1} | {パス表現2} | {共通パス表現}\n')
+
+# 以下のテストは100本ノックの説明から若干変更した。
+# 100本ノックの説明は矛盾しているように思う。
+# 仕様では名詞句を X, Y に置き換えるように書かれているが、出力サンプルでは
+# 名詞を置き換え、それに続く助詞は置き換えられていない。
+# おそらく出力サンプルが間違っているものと思われる。
+# 出力サンプルに似せようと努力した結果、上述の実装は以下のような奇妙な出力(XX)を
+# 含む：「XXで | Y -> 獰悪な | 種族であったそうだ」
+
+correct_answer = '''Xは | Yで -> 始めて -> 人間という -> ものを | 見た
+Xは | Yという -> ものを | 見た
+Xは | Yを | 見た
+Xで -> 始めて -> Yという
+Xで -> 始めて -> 人間という -> Yを
+Xという -> Yを
+'''
+
+with io.StringIO() as s:
+    係り受けパス(s, sentences[5])
+    print(s.getvalue())
+    assert s.getvalue() == correct_answer, '49. 名詞間の係り受けパスの抽出'
+
+with open('5/neko-係り受けパス.txt', 'wt') as w:
+    for sentence in sentences:
+        係り受けパス(w, sentence)
