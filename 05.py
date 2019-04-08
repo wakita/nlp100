@@ -352,6 +352,31 @@ title('48. 名詞から根へのパスの抽出')
 ものを -> 見た
 '''
 
+def 根へのパス(w, sentence):
+    for chunk in sentence:
+        # 名詞を含む文節か？
+        if not [morph for morph in chunk.morphs() if morph.pos == '名詞']:
+            continue
+        文節列 = [chunk]
+        while chunk.dst != -1:
+            chunk = sentence[chunk.dst]
+            文節列.append(chunk)
+        w.write(f"{' -> '.join([文節.text() for 文節 in 文節列])}\n")
+
+correct_answer = '''吾輩は -> 見た
+ここで -> 始めて -> 人間という -> ものを -> 見た
+人間という -> ものを -> 見た
+ものを -> 見た
+'''
+
+with io.StringIO() as s:
+    根へのパス(s, sentences[5])
+    print(s.getvalue())
+    assert s.getvalue() == correct_answer, '48. 名詞から根へのパスの抽出'
+
+with open('5/neko-根へのパス.txt', 'wt') as w:
+    for sentence in sentences:
+        根へのパス(w, sentence)
 
 title('49. 名詞間の係り受けパスの抽出')
 
