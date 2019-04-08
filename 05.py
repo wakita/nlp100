@@ -181,7 +181,8 @@ def visualize(文):
     for 節 in 文: G.add_node(節, label=節.text())
     for 節 in 文[:-1]: G.add_edge(節, 文[節.dst])
     g = nx.nx_agraph.to_agraph(G)
-    g.draw(f"5/{''.join([節.text() for 節 in 文])}.pdf", format='pdf', prog='dot')
+    g.draw(f"5/{''.join([節.text() for 節 in 文])}.pdf",
+           format='pdf', prog='dot')
 
 visualize(sentences[5])
 
