@@ -12,7 +12,9 @@ chapter('第6章: 英語テキストの処理')
 system('''
 if [ ! -f data/nlp.txt ]; then
   curl -o data/nlp.txt http://www.cl.ecei.tohoku.ac.jp/nlp100/data/nlp.txt
-fi''')
+fi
+
+mkdir -p 6''')
 
 
 title ('50. 文区切り')
@@ -45,9 +47,16 @@ re_statement_delimiter = re.compile(r'(?<=[.;:?!])\s+(?=[A-Z])')
 text = re_statement_delimiter.split(text)
 for line in text[:5]: print(line)
 
+
 title ('51. 単語の切り出し')
 
 # 空白を単語の区切りとみなし，50の出力を入力として受け取り，1行1単語の形式で出力せよ．ただし，文の終端では空行を出力せよ．
+
+re_whitespaces = re.compile(r'\s+')
+
+with open('6/words.txt', 'wt') as w:
+    for line in text:
+        if line != '': w.write('\n'.join(re_whitespaces.split(line)) + '\n\n')
 
 
 title ('52. ステミング')
