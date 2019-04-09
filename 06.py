@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+import re
+
 from common import *
 
 chapter('第6章: 英語テキストの処理')
@@ -16,6 +19,31 @@ title ('50. 文区切り')
 
 # (. or ; or : or ? or !) → 空白文字 → 英大文字というパターンを文の区切りと見なし，入力された文書を1行1文の形式で出力せよ．
 
+text = Path('data/nlp.txt').read_text()
+
+'''
+(?=...)
+    Matches if ... matches next, but doesn’t consume any of the string.
+    This is called a lookahead assertion. For example, Isaac (?=Asimov)
+    will match 'Isaac ' only if it’s followed by 'Asimov'.
+
+(?<=...)
+    Matches if the current position in the string is preceded by a match
+    for ... that ends at the current position. This is called a positive
+    lookbehind assertion. (?<=abc)def will find a match in 'abcdef', since
+    the lookbehind will back up 3 characters and check if the contained
+    pattern matches. The contained pattern must only match strings of some
+    fixed length, meaning that abc or a|b are allowed, but a* and a{3,4}
+    are not. Note that patterns which start with positive lookbehind
+    assertions will not match at the beginning of the string being searched;
+    you will most likely want to use the search() function rather than the
+    match() function:
+'''
+
+re_statement_delimiter = re.compile(r'(?<=[.;:?!])\s+(?=[A-Z])')
+
+text = re_statement_delimiter.split(text)
+for line in text[:5]: print(line)
 
 title ('51. 単語の切り出し')
 
