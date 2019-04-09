@@ -3,6 +3,8 @@
 from pathlib import Path
 import re
 
+from stemming.porter2 import stem
+
 from common import *
 
 chapter('第6章: 英語テキストの処理')
@@ -63,6 +65,15 @@ title ('52. ステミング')
 
 # 51の出力を入力として受け取り，Porterのステミングアルゴリズムを適用し，単語と語幹をタブ区切り形式で出力せよ． Pythonでは，Porterのステミングアルゴリズムの実装としてstemmingモジュールを利用するとよい．
 
+re_word = re.compile(r'(\w+)')
+
+with open('6/words.txt') as r, open('6/stems.txt', 'wt') as w:
+    for line in r:
+        m = re_word.match(line)
+        if m:
+            word = m.group(1)
+            w.write(f'{word}\t{stem(word)}\n')
+        else: w.write('\n')
 
 title ('53. Tokenization')
 
