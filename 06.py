@@ -140,7 +140,6 @@ class CoreNLP54(ContentHandler):
             info = self.info
             self.w.write(f"{info['word']}\t{info['lemma']}\t{info['POS']}\n")
 
-
     def characters(self, content):
         element = self.stack[-1]
         if element in ['word', 'lemma', 'POS']: self.info[element] = content
@@ -161,6 +160,39 @@ main54()
 title ('55. 固有表現抽出')
 
 # 入力文中の人名をすべて抜き出せ．
+
+class CoreNLP55(ContentHandler):
+    re_capitalized = re.compile('[A-Z][a-z]+')
+
+    def __init__(self, w):
+        self.stack = []
+        self.info = None
+        self.name = None
+        self.w = w
+        
+    def startElement(self, name, attrs):
+        self.stack.append(name)
+        if name == 'token': self.info = dict()
+
+    def endElement(self, name):
+        self.stack = self.stack[:-1]
+        if name == 'token' and self.info['POS'] == 'NNP' and self.info['NER'] == 'PERSON':
+            if self.name:
+                print(f"{self.name} {self.info['word']}")
+                self.name = None
+            else: self.name = self.info['word']
+
+    def characters(self, content):
+        element = self.stack[-1]
+        if element in ['word', 'POS', 'NER']: self.info[element] = content
+
+def main55():
+    with open('data/nlp.txt.xml') as r:
+        parser = xml.sax.make_parser()
+        parser.setContentHandler(CoreNLP55(w))
+        parser.parse(r)
+
+main55()
 
 
 title ('56. 共参照解析')
