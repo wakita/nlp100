@@ -83,15 +83,16 @@ title ('53. Tokenization')
 
 system('''
 if [ ! -f data/nlp.txt.xml ]; then
-       corenlp -file data/nlp.txt -outputDirectory data
+       corenlp -file data/nlp.txt -annotators tokenize,ssplit,pos,lemma,ner -outputDirectory data
 fi''')
 
 import xml.sax
 from xml.sax.handler import ContentHandler
 
 class CoreNLPHandler(ContentHandler):
-    def __init__(self):
+    def __init__(self, w):
         self.stack = []
+        self.w = w
         
     def startElement(self, name, attrs):
         self.stack.append(name)
@@ -100,12 +101,17 @@ class CoreNLPHandler(ContentHandler):
         self.stack = self.stack[:-1]
 
     def characters(self, content):
-        if self.stack[-1] == 'word': print(content)
+        if self.stack[-1] == 'word':
+            self.w.write(content + '\n')
 
 def main53():
-    parser = xml.sax.make_parser()
-    parser.setContentHandler(CoreNLPHandler())
-    with open('data/nlp.txt.xml') as r: parser.parse(r)
+    with open('data/nlp.txt.xml') as r, open('data/nlp-words.txt', 'wt') as w:
+        parser = xml.sax.make_parser()
+        parser.setContentHandler(CoreNLPHandler(w))
+        parser.parse(r)
+    n_words = 10
+    print(f'## First {n_words} words\n')
+    print(system(f'head -n {n_words} data/nlp-words.txt'))
 
 main53()
 
