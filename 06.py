@@ -83,13 +83,13 @@ title ('53. Tokenization')
 
 system('''
 if [ ! -f data/nlp.txt.xml ]; then
-       corenlp -file data/nlp.txt -annotators tokenize,ssplit,pos,lemma,ner -outputDirectory data
+       corenlp -file data/nlp.txt -outputDirectory data
 fi''')
 
 import xml.sax
 from xml.sax.handler import ContentHandler
 
-class CoreNLPHandler(ContentHandler):
+class CoreNLP53(ContentHandler):
     def __init__(self, w):
         self.stack = []
         self.w = w
@@ -107,7 +107,7 @@ class CoreNLPHandler(ContentHandler):
 def main53():
     with open('data/nlp.txt.xml') as r, open('data/nlp-words.txt', 'wt') as w:
         parser = xml.sax.make_parser()
-        parser.setContentHandler(CoreNLPHandler(w))
+        parser.setContentHandler(CoreNLP53(w))
         parser.parse(r)
     n_words = 10
     print(f'## First {n_words} words\n')
@@ -118,6 +118,44 @@ main53()
 title ('54. 品詞タグ付け')
 
 # Stanford Core NLPの解析結果XMLを読み込み，単語，レンマ，品詞をタブ区切り形式で出力せよ．
+
+# https://qiita.com/shunyooo/items/2c1ce1d765f46a5c1d72
+# Treebank: https://en.wikipedia.org/wiki/Treebank
+# The Penn Treebank Project (web archive):
+#   https://web.archive.org/web/20131109202842/http://www.cis.upenn.edu/~treebank/
+
+class CoreNLP54(ContentHandler):
+    def __init__(self, w):
+        self.stack = []
+        self.info = None
+        self.w = w
+        
+    def startElement(self, name, attrs):
+        self.stack.append(name)
+        if name == 'token': self.info = dict()
+
+    def endElement(self, name):
+        self.stack = self.stack[:-1]
+        if name == 'token':
+            info = self.info
+            self.w.write(f"{info['word']}\t{info['lemma']}\t{info['POS']}\n")
+
+
+    def characters(self, content):
+        element = self.stack[-1]
+        if element in ['word', 'lemma', 'POS']: self.info[element] = content
+
+def main54():
+    with open('data/nlp.txt.xml') as r, open('data/nlp-pos.tsv', 'wt') as w:
+        parser = xml.sax.make_parser()
+        parser.setContentHandler(CoreNLP54(w))
+        parser.parse(r)
+
+    n_words = 10
+    print(f'## First {n_words} words\n')
+    print(system(f'head -n {n_words} data/nlp-pos.tsv'))
+
+main54()
 
 
 title ('55. 固有表現抽出')
