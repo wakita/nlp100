@@ -79,6 +79,35 @@ title ('53. Tokenization')
 
 # Stanford Core NLPを用い，入力テキストの解析結果をXML形式で得よ．また，このXMLファイルを読み込み，入力テキストを1行1単語の形式で出力せよ．
 
+# Stanford CoreNLP のインストール方法については Readme.md を参照のこと。
+
+system('''
+if [ ! -f data/nlp.txt.xml ]; then
+       corenlp -file data/nlp.txt -outputDirectory data
+fi''')
+
+import xml.sax
+from xml.sax.handler import ContentHandler
+
+class CoreNLPHandler(ContentHandler):
+    def __init__(self):
+        self.stack = []
+        
+    def startElement(self, name, attrs):
+        self.stack.append(name)
+
+    def endElement(self, name):
+        self.stack = self.stack[:-1]
+
+    def characters(self, content):
+        if self.stack[-1] == 'word': print(content)
+
+def main53():
+    parser = xml.sax.make_parser()
+    parser.setContentHandler(CoreNLPHandler())
+    with open('data/nlp.txt.xml') as r: parser.parse(r)
+
+main53()
 
 title ('54. 品詞タグ付け')
 
