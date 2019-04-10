@@ -161,30 +161,35 @@ title ('55. 固有表現抽出')
 
 # 入力文中の人名をすべて抜き出せ．
 
-class CoreNLP55(ContentHandler):
-    re_capitalized = re.compile('[A-Z][a-z]+')
+'''
+方針
+{ pos=NNP, NER=PERSON }+ を切り出す
+{ NER=PERSON }+ でもよさそう
+'''
 
+class CoreNLP55(ContentHandler):
     def __init__(self, w):
         self.stack = []
-        self.info = None
-        self.name = None
+        self.token = None
+        self.person_name = []
         self.w = w
         
     def startElement(self, name, attrs):
         self.stack.append(name)
-        if name == 'token': self.info = dict()
+        if name == 'token': self.token = dict()
 
     def endElement(self, name):
         self.stack = self.stack[:-1]
-        if name == 'token' and self.info['POS'] == 'NNP' and self.info['NER'] == 'PERSON':
-            if self.name:
-                print(f"{self.name} {self.info['word']}")
-                self.name = None
-            else: self.name = self.info['word']
+        if name == 'token':
+            if self.token['NER'] == 'PERSON':
+                self.person_name.append(self.token['word'])
+            else:
+                if self.person_name: print(' '.join(self.person_name))
+                self.person_name = []
 
     def characters(self, content):
         element = self.stack[-1]
-        if element in ['word', 'POS', 'NER']: self.info[element] = content
+        if element in ['word', 'NER']: self.token[element] = content
 
 def main55():
     with open('data/nlp.txt.xml') as r:
@@ -198,6 +203,15 @@ main55()
 title ('56. 共参照解析')
 
 # Stanford Core NLPの共参照解析の結果に基づき，文中の参照表現（mention）を代表参照表現（representative mention）に置換せよ．ただし，置換するときは，「代表参照表現（参照表現）」のように，元の参照表現が分かるように配慮せよ．
+
+'''
+100本ノック経験者のブログに「CoreNLPの共参照解析はダメだ」のような記述を散見する。彼らは annota dcoref を使っているようだ。ぼくはたまたま annota coref を使っていたため、彼らが「ダメだ」と主張する現象に出会わなかった。不思議に思い、ググっていたところ、以下の記事をみつけた。
+https://nlp.stanford.edu/software/dcoref.html
+要点は三つ：
+- coref を追加した
+- coref は dcoref よりも優秀
+- coref はデフォルトでサポート（わざわざ -annota しないでよい）
+'''
 
 
 title ('57. 係り受け解析')
