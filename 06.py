@@ -25,25 +25,6 @@ title ('50. 文区切り')
 
 text = Path('data/nlp.txt').read_text()
 
-'''
-(?=...)
-    Matches if ... matches next, but doesn’t consume any of the string.
-    This is called a lookahead assertion. For example, Isaac (?=Asimov)
-    will match 'Isaac ' only if it’s followed by 'Asimov'.
-
-(?<=...)
-    Matches if the current position in the string is preceded by a match
-    for ... that ends at the current position. This is called a positive
-    lookbehind assertion. (?<=abc)def will find a match in 'abcdef', since
-    the lookbehind will back up 3 characters and check if the contained
-    pattern matches. The contained pattern must only match strings of some
-    fixed length, meaning that abc or a|b are allowed, but a* and a{3,4}
-    are not. Note that patterns which start with positive lookbehind
-    assertions will not match at the beginning of the string being searched;
-    you will most likely want to use the search() function rather than the
-    match() function:
-'''
-
 re_statement_delimiter = re.compile(r'(?<=[.;:?!])\s+(?=[A-Z])')
 
 text = re_statement_delimiter.split(text)
@@ -119,11 +100,6 @@ title ('54. 品詞タグ付け')
 
 # Stanford Core NLPの解析結果XMLを読み込み，単語，レンマ，品詞をタブ区切り形式で出力せよ．
 
-# https://qiita.com/shunyooo/items/2c1ce1d765f46a5c1d72
-# Treebank: https://en.wikipedia.org/wiki/Treebank
-# The Penn Treebank Project (web archive):
-#   https://web.archive.org/web/20131109202842/http://www.cis.upenn.edu/~treebank/
-
 class CoreNLP54(ContentHandler):
     def __init__(self, w):
         self.stack = []
@@ -161,12 +137,6 @@ title ('55. 固有表現抽出')
 
 # 入力文中の人名をすべて抜き出せ．
 
-'''
-方針
-{ pos=NNP, NER=PERSON }+ を切り出す
-{ NER=PERSON }+ でもよさそう
-'''
-
 class CoreNLP55(ContentHandler):
     def __init__(self, w):
         self.stack = []
@@ -203,15 +173,65 @@ main55()
 title ('56. 共参照解析')
 
 # Stanford Core NLPの共参照解析の結果に基づき，文中の参照表現（mention）を代表参照表現（representative mention）に置換せよ．ただし，置換するときは，「代表参照表現（参照表現）」のように，元の参照表現が分かるように配慮せよ．
+'''
+      <coreference>
+        <mention representative="true">
+          <sentence>37</sentence>
+          <start>5</start>
+          <end>8</end>
+          <head>7</head>
+          <text>machine learning algorithms</text>
+        </mention>
+        <mention>
+          <sentence>38</sentence>
+          <start>1</start>
+          <end>3</end>
+          <head>2</head>
+          <text>These algorithms</text>
+        </mention>
+      </coreference>
+'''
 
-'''
-100本ノック経験者のブログに「CoreNLPの共参照解析はダメだ」のような記述を散見する。彼らは annota dcoref を使っているようだ。ぼくはたまたま annota coref を使っていたため、彼らが「ダメだ」と主張する現象に出会わなかった。不思議に思い、ググっていたところ、以下の記事をみつけた。
-https://nlp.stanford.edu/software/dcoref.html
-要点は三つ：
-- coref を追加した
-- coref は dcoref よりも優秀
-- coref はデフォルトでサポート（わざわざ -annota しないでよい）
-'''
+class
+
+class P56Coref(ContentHandler):
+    def __init__(self, w):
+        self.stack = []
+        self.token = None
+        self.person_name = []
+        self.w = w
+
+    def startElement(self, name, attrs):
+        self.stack.append(name)
+        if name == 'mension':
+
+            if 'representative' in attrs.keys():
+                if 
+                coref['representative'] = attrs
+                if attrs['representative'] == 'true':
+                    self.coref
+
+    def endElement(self, name):
+        self.stack = self.stack[:-1]
+        if name == 'token':
+            if self.token['NER'] == 'PERSON':
+                self.person_name.append(self.token['word'])
+            else:
+                if self.person_name: print(' '.join(self.person_name))
+                self.person_name = []
+
+    def characters(self, content):
+        element = self.stack[-1]
+        if element in ['word', 'NER']: self.token[element] = content
+
+    @staticmethod
+    def run():
+        with open('data/nlp.txt.xml') as r:
+            parser = xml.sax.make_parser()
+            parser.setContentHandler(CoreNLP56(w))
+            parser.parse(r)
+
+CoreNLP56.run()
 
 
 title ('57. 係り受け解析')
