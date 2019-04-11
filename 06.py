@@ -70,86 +70,85 @@ fi''')
 import xml.sax
 from xml.sax.handler import ContentHandler
 
-class CoreNLP53(ContentHandler):
+class CoreNLPHandler(ContentHandler):
     def __init__(self, w):
         self.stack = []
         self.w = w
-        
+
     def startElement(self, name, attrs):
         self.stack.append(name)
 
     def endElement(self, name):
         self.stack = self.stack[:-1]
 
+    def top(self): return self.stack[-1]
+
+
+class P53Handler(CoreNLPHandler):
+    def __init__(self, w):
+        super().__init__(w)
+
     def characters(self, content):
-        if self.stack[-1] == 'word':
-            self.w.write(content + '\n')
+        if self.top() == 'word': self.w.write(content + '\n')
 
-def main53():
-    with open('data/nlp.txt.xml') as r, open('data/nlp-words.txt', 'wt') as w:
-        parser = xml.sax.make_parser()
-        parser.setContentHandler(CoreNLP53(w))
-        parser.parse(r)
-    n_words = 10
-    print(f'## First {n_words} words\n')
-    print(system(f'head -n {n_words} data/nlp-words.txt'))
+with open('data/nlp.txt.xml') as r, open('data/nlp-words.txt', 'wt') as w:
+    parser = xml.sax.make_parser()
+    parser.setContentHandler(P53Handler(w))
+    parser.parse(r)
 
-main53()
+n_words = 10
+print(f'## First {n_words} words\n')
+print(system(f'head -n {n_words} data/nlp-words.txt'))
 
 title ('54. 品詞タグ付け')
 
 # Stanford Core NLPの解析結果XMLを読み込み，単語，レンマ，品詞をタブ区切り形式で出力せよ．
 
-class CoreNLP54(ContentHandler):
-    def __init__(self, w):
-        self.stack = []
-        self.info = None
-        self.w = w
+class P54Handler(CoreNLPHandler):
+    token = None
+
+    def __init__(self, w): super().__init__(w)
         
     def startElement(self, name, attrs):
-        self.stack.append(name)
-        if name == 'token': self.info = dict()
+        super().startElement(name, attrs)
+        if name == 'token': self.token = dict()
 
     def endElement(self, name):
-        self.stack = self.stack[:-1]
+        super().endElement(name)
         if name == 'token':
-            info = self.info
-            self.w.write(f"{info['word']}\t{info['lemma']}\t{info['POS']}\n")
+            token = self.token
+            self.w.write(f"{token['word']}\t{token['lemma']}\t{token['POS']}\n")
 
     def characters(self, content):
-        element = self.stack[-1]
-        if element in ['word', 'lemma', 'POS']: self.info[element] = content
+        element = self.top()
+        if element in ['word', 'lemma', 'POS']: self.token[element] = content
 
-def main54():
-    with open('data/nlp.txt.xml') as r, open('data/nlp-pos.tsv', 'wt') as w:
-        parser = xml.sax.make_parser()
-        parser.setContentHandler(CoreNLP54(w))
-        parser.parse(r)
+with open('data/nlp.txt.xml') as r, open('data/nlp-pos.tsv', 'wt') as w:
+    parser = xml.sax.make_parser()
+    parser.setContentHandler(P54Handler(w))
+    parser.parse(r)
 
-    n_words = 10
-    print(f'## First {n_words} words\n')
-    print(system(f'head -n {n_words} data/nlp-pos.tsv'))
-
-main54()
+n_words = 10
+print(f'## First {n_words} words\n')
+print(system(f'head -n {n_words} data/nlp-pos.tsv'))
 
 
 title ('55. 固有表現抽出')
 
 # 入力文中の人名をすべて抜き出せ．
 
-class CoreNLP55(ContentHandler):
-    def __init__(self, w):
-        self.stack = []
-        self.token = None
-        self.person_name = []
-        self.w = w
+class P55Handler(CoreNLPHandler):
+    token = None
+    person_name = []
+
+    def __init__(self, w): super().__init__(w)
         
     def startElement(self, name, attrs):
-        self.stack.append(name)
+        super().startElement(name, attrs)
         if name == 'token': self.token = dict()
 
     def endElement(self, name):
-        self.stack = self.stack[:-1]
+        super().endElement(name)
         if name == 'token':
             if self.token['NER'] == 'PERSON':
                 self.person_name.append(self.token['word'])
@@ -158,80 +157,18 @@ class CoreNLP55(ContentHandler):
                 self.person_name = []
 
     def characters(self, content):
-        element = self.stack[-1]
+        element = self.top()
         if element in ['word', 'NER']: self.token[element] = content
 
-def main55():
-    with open('data/nlp.txt.xml') as r:
-        parser = xml.sax.make_parser()
-        parser.setContentHandler(CoreNLP55(w))
-        parser.parse(r)
-
-main55()
+with open('data/nlp.txt.xml') as r:
+    parser = xml.sax.make_parser()
+    parser.setContentHandler(P55Handler(w))
+    parser.parse(r)
 
 
 title ('56. 共参照解析')
 
 # Stanford Core NLPの共参照解析の結果に基づき，文中の参照表現（mention）を代表参照表現（representative mention）に置換せよ．ただし，置換するときは，「代表参照表現（参照表現）」のように，元の参照表現が分かるように配慮せよ．
-'''
-      <coreference>
-        <mention representative="true">
-          <sentence>37</sentence>
-          <start>5</start>
-          <end>8</end>
-          <head>7</head>
-          <text>machine learning algorithms</text>
-        </mention>
-        <mention>
-          <sentence>38</sentence>
-          <start>1</start>
-          <end>3</end>
-          <head>2</head>
-          <text>These algorithms</text>
-        </mention>
-      </coreference>
-'''
-
-class
-
-class P56Coref(ContentHandler):
-    def __init__(self, w):
-        self.stack = []
-        self.token = None
-        self.person_name = []
-        self.w = w
-
-    def startElement(self, name, attrs):
-        self.stack.append(name)
-        if name == 'mension':
-
-            if 'representative' in attrs.keys():
-                if 
-                coref['representative'] = attrs
-                if attrs['representative'] == 'true':
-                    self.coref
-
-    def endElement(self, name):
-        self.stack = self.stack[:-1]
-        if name == 'token':
-            if self.token['NER'] == 'PERSON':
-                self.person_name.append(self.token['word'])
-            else:
-                if self.person_name: print(' '.join(self.person_name))
-                self.person_name = []
-
-    def characters(self, content):
-        element = self.stack[-1]
-        if element in ['word', 'NER']: self.token[element] = content
-
-    @staticmethod
-    def run():
-        with open('data/nlp.txt.xml') as r:
-            parser = xml.sax.make_parser()
-            parser.setContentHandler(CoreNLP56(w))
-            parser.parse(r)
-
-CoreNLP56.run()
 
 
 title ('57. 係り受け解析')
