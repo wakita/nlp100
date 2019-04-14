@@ -71,25 +71,34 @@ import xml.sax
 from xml.sax.handler import ContentHandler
 
 class CoreNLPHandler(ContentHandler):
-    def __init__(self, w):
+    def __init__(self, w=None):
         self.stack = []
         self.w = w
 
     def startElement(self, name, attrs):
-        self.stack.append(name)
+        node = { 'tag': name }
+        self.stack.append(node)
+        return node
 
     def endElement(self, name):
+        element = self.stack[-1]
         self.stack = self.stack[:-1]
+        return element
 
-    def top(self): return self.stack[-1]
+    def characters(self, content): return self.top()
+
+    def top(self, tag=None):
+        S = self.stack
+        if tag:
+            for i in reversed(range(len(S))):
+                if S[i]['tag'] == tag: return S[i]
+            return None
+        else: return S[-1]
 
 
 class P53Handler(CoreNLPHandler):
-    def __init__(self, w):
-        super().__init__(w)
-
     def characters(self, content):
-        if self.top() == 'word': self.w.write(content + '\n')
+        if self.top('word'): self.w.write(content + '\n')
 
 with open('data/nlp.txt.xml') as r, open('data/nlp-words.txt', 'wt') as w:
     parser = xml.sax.make_parser()
@@ -105,23 +114,16 @@ title ('54. 品詞タグ付け')
 # Stanford Core NLPの解析結果XMLを読み込み，単語，レンマ，品詞をタブ区切り形式で出力せよ．
 
 class P54Handler(CoreNLPHandler):
-    token = None
-
-    def __init__(self, w): super().__init__(w)
-        
-    def startElement(self, name, attrs):
-        super().startElement(name, attrs)
-        if name == 'token': self.token = dict()
-
     def endElement(self, name):
-        super().endElement(name)
-        if name == 'token':
-            token = self.token
+        element = super().endElement(name)
+        if element['tag'] == 'token':
+            token = element
             self.w.write(f"{token['word']}\t{token['lemma']}\t{token['POS']}\n")
 
     def characters(self, content):
-        element = self.top()
-        if element in ['word', 'lemma', 'POS']: self.token[element] = content
+        attr = super().characters(content)['tag']
+        if attr in ['word', 'lemma', 'POS']:
+            self.top('token')[attr] = content
 
 with open('data/nlp.txt.xml') as r, open('data/nlp-pos.tsv', 'wt') as w:
     parser = xml.sax.make_parser()
@@ -138,37 +140,125 @@ title ('55. 固有表現抽出')
 # 入力文中の人名をすべて抜き出せ．
 
 class P55Handler(CoreNLPHandler):
-    token = None
     person_name = []
 
-    def __init__(self, w): super().__init__(w)
-        
-    def startElement(self, name, attrs):
-        super().startElement(name, attrs)
-        if name == 'token': self.token = dict()
-
     def endElement(self, name):
-        super().endElement(name)
-        if name == 'token':
-            if self.token['NER'] == 'PERSON':
-                self.person_name.append(self.token['word'])
-            else:
-                if self.person_name: print(' '.join(self.person_name))
+        element = super().endElement(name)
+        if element['tag'] == 'token':
+            token = element
+            if token['NER'] == 'PERSON': self.person_name.append(token['word'])
+            elif self.person_name:
+                print(' '.join(self.person_name))
                 self.person_name = []
+        elif name == 'sentence' and self.person_name:  # 文末が人名な場合への対応
+            print(' '.join(self.person_name))
+            self.person_name = []
 
     def characters(self, content):
-        element = self.top()
-        if element in ['word', 'NER']: self.token[element] = content
+        attr, token = super().characters(content)['tag'], self.top('token')
+        if attr in ['word', 'NER'] and token: token[attr] = content
 
 with open('data/nlp.txt.xml') as r:
     parser = xml.sax.make_parser()
-    parser.setContentHandler(P55Handler(w))
+    parser.setContentHandler(P55Handler())
     parser.parse(r)
 
 
 title ('56. 共参照解析')
 
 # Stanford Core NLPの共参照解析の結果に基づき，文中の参照表現（mention）を代表参照表現（representative mention）に置換せよ．ただし，置換するときは，「代表参照表現（参照表現）」のように，元の参照表現が分かるように配慮せよ．
+
+class FindCoref(CoreNLPHandler):
+    substitutions = []
+
+    def startElement(self, name, attrs):
+        node = super().startElement(name, attrs)
+        if name == 'mention':
+            coreference = self.top('coreference')
+            if attrs.get('representative'): coreference['mentions'] = []
+            coreference['mentions'].append(node)
+
+    def endElement(self, name):
+        node = super().endElement(name)
+        if name == 'coreference':
+            mentions = node.get('mentions')
+            if mentions:
+                replacement = mentions[0]['text']  # representative mention
+                for m in mentions[1:]:
+                    self.substitutions.append((m, replacement))
+
+    def characters(self, content):
+        attr = self.top()['tag']
+        mention = self.top('mention')
+        if mention:
+            if attr in ['sentence', 'start', 'end']: mention[attr] = int(content)
+            elif attr == 'text': mention[attr] = content
+
+with open('data/nlp.txt.xml') as r:
+    parser = xml.sax.make_parser()
+    finder = FindCoref()
+    parser.setContentHandler(finder)
+    parser.parse(r)
+
+substitutions = sorted(finder.substitutions,
+                       key=lambda subst: [subst[0]['sentence'], subst[0]['start'], subst[0]['end']])
+# for subst in substitutions: print(subst)
+
+class ApplyCoref(CoreNLPHandler):
+    substitutions = []
+    parsing_done = False
+
+    def __init__(self, substitutions):
+        super().__init__(self)
+        self.substitutions = substitutions
+
+    def startElement(self, name, attrs):
+        if self.parsing_done: return
+        node = super().startElement(name, attrs)
+        if name == 'token':
+            node['id'] = attrs['id']
+        if name == 'sentence' and self.top('sentences'):
+            node['id'] = attrs['id']
+            node['pos'] = 0
+            node['tokens'] = []
+
+    def endElement(self, name):
+        if self.parsing_done: return
+        node = super().endElement(name)
+        if name == 'token': self.top('sentence')['tokens'].append(node)
+        if name == 'sentence':
+            sentence = node
+            (subst, replacement), *_ = S = self.substitutions
+            sentence_id = int(sentence['id'])
+            if subst['sentence'] != sentence_id: return
+
+            pos, words = 0, []
+            for token in sentence['tokens']:
+                if words: words.append(' ' * (token['CharacterOffsetBegin'] - pos))
+                words.append(token['word'])
+                pos = token['CharacterOffsetEnd']
+                if int(token['id']) == subst['end'] - 1:
+                    words.append(f' ({replacement})')
+                    coref = True
+                    if len(S) > 1: (subst, replacement), *_ = S = S[1:]
+            self.substitutions = S
+
+            print(f'\n{"".join(words)}')
+        if name == 'sentences': self.parsing_done = True
+
+    def characters(self, content):
+        if self.parsing_done: return
+        super().characters(content)
+        node = self.top()
+        tag = node['tag']
+        if tag in ['CharacterOffsetBegin', 'CharacterOffsetEnd']:
+            self.top('token')[tag] = int(content)
+        elif tag == 'word': self.top('token')[tag] = content
+
+with open('data/nlp.txt.xml') as r:
+    parser = xml.sax.make_parser()
+    parser.setContentHandler(ApplyCoref(substitutions))
+    parser.parse(r)
 
 
 title ('57. 係り受け解析')
