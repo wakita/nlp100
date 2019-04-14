@@ -265,6 +265,52 @@ title ('57. 係り受け解析')
 
 # Stanford Core NLPの係り受け解析の結果（collapsed-dependencies）を有向グラフとして可視化せよ．可視化には，係り受け木をDOT言語に変換し，Graphvizを用いるとよい．また，Pythonから有向グラフを直接的に可視化するには，pydotを使うとよい．
 
+import networkx as nx
+import pygraphviz
+
+class P57Handler(CoreNLPHandler):
+    G = nx.Graph()
+    nodes = set()
+    edges = set()
+    collapsed_dependencies = False
+
+    def startElement(self, name, attrs):
+        node = super().startElement(name, attrs)
+        if name == 'dependencies':
+            self.collapsed_dependencies = (attrs['type'] == 'collapsed-dependencies')
+        if name == 'dep': node['type'] = attrs['type']
+        if name in ['governor', 'dependent']:
+            self.top('dep')[name] = node
+            node['idx'] = attrs['idx']
+
+    def endElement(self, name):
+        node = super().endElement(name)
+        if name == 'dependencies': self.collapsed_dependencies = False
+        if name == 'dep':
+            governor, dependent = node['governor']['label'], node['dependent']['label']
+            G = self.G
+            if not governor in self.nodes:
+                self.nodes.add(governor)
+                G.add_node(governor)
+            if not dependent in self.nodes:
+                self.nodes.add(dependent)
+                G.add_node(dependent)
+            G.add_edge(governor, dependent, label=node['type'])
+
+    def characters(self, content):
+        node = super().characters(content)
+        if node['tag'] in ['governor', 'dependent']:
+            node['label'] = content
+
+with open('data/bills.txt.xml') as r:
+    parser = xml.sax.make_parser()
+    handler = P57Handler()
+    parser.setContentHandler(handler)
+    parser.parse(r)
+    G = handler.G
+    g = nx.nx_agraph.to_agraph(G)
+    g.draw('data/bills.txt.pdf', format='pdf', prog='dot')
+
 
 title ('58. タプルの抽出')
 
