@@ -202,7 +202,7 @@ with open('data/nlp.txt.xml') as r:
 
 substitutions = sorted(finder.substitutions,
                        key=lambda subst: [subst[0]['sentence'], subst[0]['start'], subst[0]['end']])
-# for subst in substitutions: print(subst)
+for subst in substitutions: print(subst)
 
 class ApplyCoref(CoreNLPHandler):
     substitutions = []
