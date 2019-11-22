@@ -3,6 +3,18 @@ from os.path import exists
 from gensim import corpora
 from gensim.models.wrappers import LdaMallet
 
+'''
+必要なもの
+
+- brew install mallet
+- conda install gensim
+
+二回実行する。
+1. 最初の実行は訓練。さまざまな学習データを生成する。
+2. 二回目以後の実行はテスト。
+学習モデルファイルの有無で二種類の実行を区別している。
+'''
+
 MALLET_PATH = '/usr/local/bin/mallet'
 
 PREFIX     = 'docs-'
@@ -36,29 +48,3 @@ else:
     lda = LdaMallet(MALLET_PATH, corpus=corpus,
                     num_topics=3, workers=60, id2word=dictionary, iterations=50, prefix=PREFIX)
     lda.save(MODEL_PATH)
-
-'''
-from os.path import exists
-
-def mallet(texts):
-    import gensim
-    import gensim.corpora as corpora
-    from gensim.models.wrappers import LdaMallet
-
-    mallet_path = "/usr/local/bin/mallet" # malletがあるパス
-    model_path = "texts.mallet" #モデルを保存するパス
-
-    if exists(model_path):
-        return LdaMallet.load(str(model_path))
-    else:
-        dictionary = corpora.Dictionary(texts)
-        corpus = [dictionary.doc2bow(text) for text in texts]
-        ldamallet = LdaMallet(mallet_path, corpus=corpus, num_topics=50, id2word=dictionary, prefix='docs-')
-        ldamallet.save(model_path)
-        return ldamallet
-
-TEXTS = [ 'A classifier is an algorithm that distinguishes between a fixed set of classes such as "spam" vs non-spam based on labeled training examples', 'MALLET includes implementations of several classification algorithms including Naive Bayes Maximum Entropy and Decision Trees', 'In addition MALLET provides tools for evaluating classifiers' ]
-TEXTS = [ sentence.split(' ') for sentence in TEXTS ]
-
-mallet(TEXTS)
-'''
