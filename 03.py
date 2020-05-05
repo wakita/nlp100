@@ -214,6 +214,7 @@ title('29. 国旗画像のURLを取得する')
 import urllib.parse
 import urllib.request
 import requests
+import webbrowser
 
 flag_image_name = basic_info['国旗画像']
 
@@ -222,7 +223,8 @@ request_url = f'https://www.mediawiki.org/w/api.php?action=query&format=json&tit
 r = requests.get(request_url)
 answer = r.json()
 url = answer['query']['pages']['-1']['imageinfo'][0]['url']
-system(f'open {url}')
+#system(f'open {url}')
+webbrowser.open(url)
 
 # Solution 2 (Recommended)
 mediawiki_api_url = 'https://www.mediawiki.org/w/api.php'
@@ -238,4 +240,5 @@ r = requests.get(mediawiki_api_url, params=query_params)
 print(r.url)
 url = r.json()['query']['pages']['-1']['imageinfo'][0]['url']
 print(url)
-system(f'open {url}')
+#system(f'open {url}')
+webbrowser.open(url)

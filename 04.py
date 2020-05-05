@@ -96,7 +96,7 @@ title('34. 「AのB」')
 
 # 2つの名詞が「の」で連結されている名詞句を抽出せよ．
 
-re_AのB = re.compile('N(>N)+')
+re_AのB = re.compile('N>N')
 
 def AのB(sentence, l, phrase):
     def code(w):

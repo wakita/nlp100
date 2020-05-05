@@ -29,7 +29,7 @@ with open(datapath) as r:
     with io.StringIO() as s:
         wc(r, s)
         my_answer = s.getvalue()
-        assert s.getvalue() == system(f'wc -l {datapath}'), '10. 行数のカウント'
+        assert my_answer == system(f'wc -l {datapath}'), '10. 行数のカウント'
 
 
 title('11. タブをスペースに置換')
@@ -115,8 +115,9 @@ def tail(n, r, w):
         if line != None: w.write(line)
 
 with open(datapath) as r, io.StringIO() as s:
-    tail(7, r, s)
-    assert s.getvalue() == system(f'tail -n 7 {datapath}'), '15. 末尾のN行を出力'
+    N = 7
+    tail(N, r, s)
+    assert s.getvalue() == system(f'tail -n {N} {datapath}'), f'15-B. 末尾の{N}行を出力'
 
 '''この解答例では、バッファに行の内容を読み込んでいる。このため、長い行があったり、指定された行数(n)が長い場合にメモリ領域が圧迫される。
 
@@ -125,8 +126,25 @@ with open(datapath) as r, io.StringIO() as s:
 1. 2-パスの実装：第一パスでファイル内の行数を確認し、第二パスで(行数-n)行を読み飛ばしてから、残りを出力する。
 
 2. 解答例と同様にバッファを利用するが、バッファには行の内容のかわりに、ファイル内の位置(r.tell())を記憶する。出力にあたっては指定された行数に該当するファイル内の位置に移動し(r.seek(pos))、その位置以後のファイルの内容を出力する。
+
+以下の実装は後者のアプローチ
 '''
 
+def tail(n, r, w):
+    i, buf = 1, [-1] * (n + 1)
+    while r.readline():
+        buf[i % (n + 1)] = r.tell()
+        i = i + 1
+    pos = buf[i % (n + 1)]
+    if pos >= 0:
+        r.seek(pos, io.SEEK_SET)
+        for line in r: w.write(line)
+
+with open(datapath) as r, io.StringIO() as s:
+    N = 7
+    tail(N, r, s)
+    print(s.getvalue())
+    assert s.getvalue() == system(f'tail -n {N} {datapath}'), f'15-B. 末尾の{N}行を出力'
 
 title('16. ファイルをN分割する')
 
